@@ -1,0 +1,41 @@
+@import "./base.css"; /* Custom base styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+* {
+  box-sizing: border-box;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+}
+img {
+  max-width: 100%;
+  display: block;
+}
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: "Nexa", sans-serif;
+  line-height: 1.6;
+  font-size: 18px;
+
+  background-color: whitesmoke;
+  color: black;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
