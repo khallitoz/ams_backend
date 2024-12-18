@@ -20,17 +20,20 @@ import AssetTabBar from "@/components/AssetTabBar";
 const dashboardStyles = {
     container: {
         display: "flex",
+        marginTop: 0
     },
     content: {
         width: "100%",
         marginLeft: "290px",
-        marginTop: "100px",
+        marginTop: "120px", // Matches the height of AssetTabBar + Breadcrumbs
         display: "flex",
         flexDirection: "column" as const,
         backgroundColor: "white",
         borderTop: "1px solid #d5d5d5",
         gap: "20px",
         padding: "20px",
+        // Ensures the list can scroll
+        maxHeight: "calc(100vh - 120px)", // Limits the content height to fit the scre
 
     },
     link: {
@@ -42,14 +45,15 @@ const dashboardStyles = {
         },
     },
     tableContainer: {
-        marginTop: "20px",
-        width: "60%",
-        marginX: "20px"
+        marginTop: "100px",
+        width: "100%",
+        marginX: "20px",
+        overflowY: "auto",
     },
     assetInfoRow: {
         backgroundColor: "#483D8B",
         color: "white",
-        textAlign: "center",
+        textAlign: "le",
         fontSize: "20px",
         fontWeight: "bold",
     },
@@ -106,27 +110,33 @@ const SingleAssetDetails: React.FC = () => {
         <Box sx={dashboardStyles.container}>
             <Sidebar />
             <Box sx={dashboardStyles.content}>
-                {/* Breadcrumbs */}
-                <Breadcrumbs aria-label="breadcrumb">
-                    <Link href="/user/dashboard" passHref>
-                        <Typography sx={dashboardStyles.link}>Dashboard</Typography>
-                    </Link>
-                    <Link href="/user/allassets" passHref>
-                        <Typography sx={dashboardStyles.link}>All Assets</Typography>
-                    </Link>
-                    <Typography sx={{ color: "text.primary" }}>
-                        Asset Number {assetData.assetCount}
-                    </Typography>
-                </Breadcrumbs>
+                <Box sx={{
+                    width: "83%",
+                    position: "fixed",
+                    backgroundColor: "white",
+                    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                }}>
+                    {/* Breadcrumbs */}
+                    <Breadcrumbs aria-label="breadcrumb" >
+                        <Link href="/user/dashboard" passHref>
+                            <Typography sx={dashboardStyles.link}>Dashboard</Typography>
+                        </Link>
+                        <Link href="/user/allassets" passHref>
+                            <Typography sx={dashboardStyles.link}>All Assets</Typography>
+                        </Link>
+                        <Typography sx={{ color: "text.primary" }}>
+                            Asset Number {assetData.assetCount}
+                        </Typography>
+                    </Breadcrumbs>
 
-                {/* Asset Tab Bar */}
-                <Box>
+
                     <AssetTabBar />
                 </Box>
 
                 {/* Asset Details Table */}
                 <Box sx={dashboardStyles.tableContainer}>
-                    <Box sx={{ display: "flex" }}><Button variant="contained" sx={{ marginBottom: "10px", backgroundColor: "#483D8B" }}>Print</Button></Box>
+
+
                     {assetData ? (
                         <Paper elevation={3}>
                             <Table>
@@ -219,7 +229,7 @@ const SingleAssetDetails: React.FC = () => {
                     )}
                 </Box>
             </Box>
-        </Box>
+        </Box >
     );
 };
 

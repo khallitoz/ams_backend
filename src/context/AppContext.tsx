@@ -11,6 +11,7 @@ import axios from "axios";
 import { AppReducer } from "./AppReducer"; // Make sure this is typed if necessary
 import CircularProgress from "@mui/material/CircularProgress";
 import { toast } from "react-toastify";
+import { msalInstance } from "../utils/msalconfig";
 
 // Define the initial state type
 interface StateType {
@@ -41,9 +42,9 @@ interface AppContextType extends StateType {
   addHardwareDetails: (formData: FormData) => Promise<boolean>;
   getAllAssetDetails: () => Promise<any>;
   getSingleAssetDetail: (id: string) => Promise<any>;
+  getAccessToken: () => Promise<any>;
 }
 
-// Create context with default value
 export const AppContext = createContext<AppContextType | undefined>(undefined);
 
 interface AppProviderProps {
@@ -228,6 +229,45 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       });
     }
   };
+
+
+
+  const getAccessToken = async () => {
+    const request = {
+      scopes: ["https://graph.microsoft.com/.default"],
+      account: msalInstance.getActiveAccount(), // Use the active account
+    };
+  
+    try {
+      let account = msalInstance.getActiveAccount();
+  
+      // If no active account, set it from cached accounts
+      if (!account) {
+        const accounts = msalInstance.getAllAccounts();
+        if (accounts.length > 0) {
+          msalInstance.setActiveAccount(accounts[0]);
+          account = accounts[0];
+        } else {
+          throw new Error("No accounts available. Please sign in first.");
+        }
+      }
+  
+      const response = await msalInstance.acquireTokenSilent(request);
+      return response.accessToken;
+    } catch (error) {
+      console.warn("Silent token acquisition failed. Attempting interactive login...");
+  
+      // Fallback to interactive login
+      const loginResponse = await msalInstance.loginPopup({
+        scopes: ["https://graph.microsoft.com/.default"],
+      });
+  
+      msalInstance.setActiveAccount(loginResponse.account); // Set the active account
+      return loginResponse.accessToken;
+    }
+  };
+  
+
   return (
     <AppContext.Provider
       value={{
@@ -239,6 +279,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         addHardwareDetails,
         getAllAssetDetails,
         getSingleAssetDetail,
+        getAccessToken
       }}
     >
       {children}
