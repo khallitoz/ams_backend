@@ -9,6 +9,7 @@ const router = express.Router();
 // Upload files and add hardware details
 router.post("/addhardware", uploadFiles, addHardwareDetails);
 router.get("/requestallassets", requestAllAssets);
-router.get("/requestsingleasset",  requestAllSingleAssets);
+router.get("/requestsingleasset", requestAllSingleAssets);
+
 
 export default router;
