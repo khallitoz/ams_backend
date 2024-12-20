@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { Box, Tabs, Tab } from "@mui/material";
+import AssetInfo from "./singleasset/AssetInfo"
+import AssetFiles from "./singleasset/AssetFiles"
+
 
 export default function AssetTabBar() {
     const [value, setValue] = useState<number>(0);
@@ -23,13 +26,14 @@ export default function AssetTabBar() {
                     >
                         <Tab label="Asset Info" />
                         <Tab label="Asset Files" />
-                        <Tab label="Asset Type" />
                         <Tab label="Maintenance" />
                         <Tab label="Check-in/Check-out" />
                         <Tab label="Installed Software" />
                         <Tab label="Related Items" />
                     </Tabs>
                 </Box>
+                {value === 0 && <AssetInfo />}
+                {value === 1 && <AssetFiles />}
             </Box>
         </>
     );

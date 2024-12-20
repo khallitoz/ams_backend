@@ -13,10 +13,14 @@ import {
   Paper,
   TextField,
   TablePagination,
+  Button,
 } from "@mui/material";
+import InputAdornment from "@mui/material/InputAdornment";
 import { useAppContext } from "../../context/AppContext";
 import Sidebar from "@/components/Sidebar";
 import TabBar from "@/components/TabBar";
+import SearchIcon from "@mui/icons-material/Search";
+import { useDebounce } from "@/utils/useDebounce";
 
 const dashboardStyles = {
   container: {
@@ -44,13 +48,11 @@ const dashboardStyles = {
         color: "#ffffff",
         fontWeight: "bold",
         fontSize: "18px",
-
       },
     },
     "& .MuiTableCell-root": {
       padding: "12px",
       fontSize: "14px",
-
     },
     "& .MuiTableRow-root": {
       transition: "background-color 0.3s ease",
@@ -65,7 +67,7 @@ const dashboardStyles = {
   searchContainer: {
     display: "flex",
     justifyContent: "flex-end",
-    marginBottom: "10px",
+    marginBottom: "",
   },
   searchInput: {
     width: "20%",
@@ -79,85 +81,88 @@ const AllAssets: React.FC = () => {
   const { getAllAssetDetails } = useAppContext();
   const [loading, setLoading] = useState<boolean>(true);
   const [assetData, setAssetData] = useState<any[]>([]);
+  const [totalAssets, setTotalAssets] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [page, setPage] = useState<number>(0);
   const [rowsPerPage, setRowsPerPage] = useState<number>(10);
 
+  const debouncedSearchQuery = useDebounce(searchQuery, 200);
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
   };
 
-  const handleChangePage = (_: unknown, newPage: number) => {
-    setPage(newPage);
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      setPage(0); // Reset to the first page
+      getDetails(0, rowsPerPage); // Fetch data with the current search query
+    }
   };
 
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newRowsPerPage = parseInt(event.target.value, 10);
+    setPage(0); // Reset to the first page
+    setRowsPerPage(newRowsPerPage);
+    getDetails(0, newRowsPerPage); // Fetch data with new configuration
   };
 
-  const filteredData = Array.isArray(assetData)
-    ? assetData.filter((asset) =>
-      asset.assetName?.toLowerCase().includes(searchQuery)
-    )
-    : [];
+  const getDetails = async (currentPage = page, currentRowsPerPage = rowsPerPage) => {
+    setLoading(true);
+    try {
+      const { data: assets, totalAssets } = await getAllAssetDetails(
+        currentPage + 1,
+        currentRowsPerPage,
+        searchQuery
+      );
+      setAssetData(Array.isArray(assets) ? assets : []);
+      setTotalAssets(totalAssets);
+    } catch (error: any) {
+      console.error("Error fetching asset details:", error.message);
+      setAssetData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const getDetails = async () => {
-      try {
-        const assetDetails = await getAllAssetDetails();
-        setAssetData(Array.isArray(assetDetails) ? assetDetails : []);
-      } catch (error: any) {
-        console.error("Error fetching asset details:", error.message);
-        setAssetData([]); // Fallback to an empty array on error
-      } finally {
-        setLoading(false);
-      }
-    };
-    getDetails();
-  }, []);
+    getDetails(page, rowsPerPage, debouncedSearchQuery); // Fetch data whenever debouncedSearchQuery, page, or rowsPerPage changes
+  }, [page, rowsPerPage, debouncedSearchQuery]);
 
-  // if (loading) {
-  //   return (
-  //     <CircularProgress
-  //       sx={{
-  //         position: "fixed",
-  //         top: "50%",
-  //         left: "50%",
-  //         transform: "translate(-50%, -50%)",
-  //       }}
-  //     />
-  //   );
-  // }
 
   return (
     <Box sx={dashboardStyles.container}>
       <Sidebar />
 
       <Box sx={dashboardStyles.content}>
-        <Typography sx={{ fontSize: "25px" }}>
-          All Assets
-        </Typography>
+        <Typography sx={{ fontSize: "25px" }}>All Assets</Typography>
 
         <Box>
-          <TabBar />
+          <TabBar totalAssets={totalAssets} />
         </Box>
 
-        {/* Search Input */}
         <Box sx={dashboardStyles.searchContainer}>
           <TextField
             placeholder="Search by Asset Name"
             variant="outlined"
             onChange={handleSearch}
+            value={searchQuery}
+            onKeyDown={handleKeyDown}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
             sx={dashboardStyles.searchInput}
           />
         </Box>
 
         <Box>
-          {filteredData.length > 0 ? (
+          {loading ? (
+            <CircularProgress />
+          ) : (
             <>
+              <h1>{totalAssets} Asset{totalAssets !== 1 && "s"} found</h1>
               <TableContainer component={Paper} sx={dashboardStyles.table}>
                 <Table>
                   <TableHead>
@@ -171,48 +176,37 @@ const AllAssets: React.FC = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {filteredData
-                      .slice(
-                        page * rowsPerPage,
-                        page * rowsPerPage + rowsPerPage
-                      )
-                      .map((asset) => (
-                        <Link
-                          href={`/user/singleassetdetails/${asset._id}`}
-                          key={asset._id}
-                          passHref
-                          legacyBehavior
-                        >
-                          <TableRow
-                            sx={{ textDecoration: "none" }}
-                            hover
-                            component="a"
-                          >
-                            <TableCell >{asset.assetCount}</TableCell>
-                            <TableCell>{asset.assetName}</TableCell>
-                            <TableCell>{asset.assetType}</TableCell>
-                            <TableCell>{asset.category || "N/A"}</TableCell>
-                            <TableCell>{asset.condition}</TableCell>
-                            <TableCell>{asset.location}</TableCell>
-                          </TableRow>
-                        </Link>
-                      ))}
+                    {assetData.map((asset) => (
+                      <Link
+                        href={`/user/singleassetdetails/${asset._id}`}
+                        key={asset._id}
+                        passHref
+                        legacyBehavior
+                      >
+                        <TableRow hover component="a">
+                          <TableCell>{asset.assetCount}</TableCell>
+                          <TableCell>{asset.assetName}</TableCell>
+                          <TableCell>{asset.assetType}</TableCell>
+                          <TableCell>{asset.category || "N/A"}</TableCell>
+                          <TableCell>{asset.condition}</TableCell>
+                          <TableCell>{asset.location}</TableCell>
+                        </TableRow>
+                      </Link>
+                    ))}
                   </TableBody>
                 </Table>
               </TableContainer>
-              <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
-                component="div"
-                count={filteredData.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-              />
             </>
-          ) : (
-            <Typography>No assets available</Typography>
           )}
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={totalAssets}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
         </Box>
       </Box>
     </Box>
@@ -220,3 +214,6 @@ const AllAssets: React.FC = () => {
 };
 
 export default AllAssets;
+
+
+

@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import { Box, Tabs, Tab } from "@mui/material";
 // import Inservice from "@/pages/user/inservice";
 
-export default function BasicTabs() {
+interface TabBarProps {
+  totalAssets: number;
+}
+const TabBar: React.FC = ({ totalAssets }) => {
   const [value, setValue] = useState<number>(0);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -17,7 +20,7 @@ export default function BasicTabs() {
           onChange={handleChange}
           aria-label="basic tabs example"
         >
-          <Tab label="All Assets | 50" />
+          <Tab label={`All Assets | ${totalAssets}`} />
           <Tab label="Check out Assets | 3" />
           <Tab label=" In-Service | 4" />
           <Tab label=" Inactive Assets | 0" />
@@ -27,3 +30,4 @@ export default function BasicTabs() {
     </Box>
   );
 }
+export default TabBar

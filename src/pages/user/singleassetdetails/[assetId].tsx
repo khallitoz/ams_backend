@@ -6,12 +6,7 @@ import {
     Typography,
     CircularProgress,
     Breadcrumbs,
-    Table,
-    TableBody,
-    TableRow,
-    TableCell,
-    Paper,
-    Button,
+    Divider,
 } from "@mui/material";
 import { useAppContext } from "../../../context/AppContext";
 import Sidebar from "@/components/Sidebar";
@@ -32,45 +27,30 @@ const dashboardStyles = {
         borderTop: "1px solid #d5d5d5",
         gap: "20px",
         padding: "20px",
-        // Ensures the list can scroll
-        maxHeight: "calc(100vh - 120px)", // Limits the content height to fit the scre
+        height: "calc(100vh - 120px)", // Full viewport height minus fixed elements
+        overflowY: "auto", // Allows scrolling for content
 
     },
     link: {
         textDecoration: "none",
-        fontSize: "16px",
-        color: "inherit",
+        fontSize: "20px",
+        color: "#483D8B",
         "&:hover": {
             textDecoration: "underline",
         },
     },
-    tableContainer: {
-        marginTop: "100px",
-        width: "100%",
-        marginX: "20px",
-        overflowY: "auto",
-    },
-    assetInfoRow: {
-        backgroundColor: "#483D8B",
-        color: "white",
-        textAlign: "le",
-        fontSize: "20px",
-        fontWeight: "bold",
-    },
-    tableRow: {
-        transition: "background-color 0.3s",
-        "&:hover": {
-            backgroundColor: "#D9DAE5",
-        },
-    },
+    breadcrumb: {
+        marginTop: "20px"
+    }
+
 };
 
 const SingleAssetDetails: React.FC = () => {
     const router = useRouter();
     const { assetId } = router.query;
-    const { getSingleAssetDetail } = useAppContext();
+    const { getSingleAssetDetail, singleStateData } = useAppContext();
     const [loading, setLoading] = useState<boolean>(true);
-    const [assetData, setAssetData] = useState<any | null>(null);
+
 
     // Fetch single asset data
     const getSingleAssetData = async (id: string | string[] | undefined) => {
@@ -117,117 +97,23 @@ const SingleAssetDetails: React.FC = () => {
                     boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
                 }}>
                     {/* Breadcrumbs */}
-                    <Breadcrumbs aria-label="breadcrumb" >
+                    <Breadcrumbs aria-label="breadcrumb" sx={dashboardStyles.breadcrumb} >
                         <Link href="/user/dashboard" passHref>
-                            <Typography sx={dashboardStyles.link}>Dashboard</Typography>
+                            <Typography sx={dashboardStyles.link}>DASHBOARD</Typography>
                         </Link>
                         <Link href="/user/allassets" passHref>
-                            <Typography sx={dashboardStyles.link}>All Assets</Typography>
+                            <Typography sx={dashboardStyles.link} variant="h4">ALL ASSETS</Typography>
                         </Link>
-                        <Typography sx={{ color: "text.primary" }}>
-                            Asset Number {assetData.assetCount}
+                        <Typography sx={dashboardStyles.link}>
+                            ASSET NUMBER {singleStateData.assetCount}
                         </Typography>
                     </Breadcrumbs>
 
 
                     <AssetTabBar />
+                    <Divider />
                 </Box>
 
-                {/* Asset Details Table */}
-                <Box sx={dashboardStyles.tableContainer}>
-
-
-                    {assetData ? (
-                        <Paper elevation={3}>
-                            <Table>
-                                <TableBody>
-                                    {/* Asset Info Header */}
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={2}
-                                            sx={dashboardStyles.assetInfoRow}
-                                        >
-                                            Asset Info
-                                        </TableCell>
-                                    </TableRow>
-                                    {/* Asset Details */}
-
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Asset Number</b></TableCell>
-                                        <TableCell>{assetData.assetCount || "N/A"}</TableCell>
-                                    </TableRow>
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Asset Name</b></TableCell>
-                                        <TableCell>{assetData.assetName || "N/A"}</TableCell>
-                                    </TableRow>
-
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Description</b></TableCell>
-                                        <TableCell>{assetData.description || "N/A"}</TableCell>
-                                    </TableRow>
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Category</b></TableCell>
-                                        <TableCell>{assetData.category || "N/A"}</TableCell>
-                                    </TableRow>
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Condition</b></TableCell>
-                                        <TableCell>{assetData.condition || "N/A"}</TableCell>
-                                    </TableRow>
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Assigned To</b></TableCell>
-                                        <TableCell>{assetData.assignedTo || "N/A"}</TableCell>
-                                    </TableRow>
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Price</b></TableCell>
-                                        <TableCell>{assetData.price || "N/A"}</TableCell>
-                                    </TableRow>
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Warranty Date</b></TableCell>
-                                        <TableCell>{assetData.warrantyDate || "N/A"}</TableCell>
-                                    </TableRow>
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Warranty Type</b></TableCell>
-                                        <TableCell>{assetData.warrantyType || "N/A"}</TableCell>
-                                    </TableRow>
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Vendor</b></TableCell>
-                                        <TableCell>{assetData.vendor || "N/A"}</TableCell>
-                                    </TableRow>
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Status</b></TableCell>
-                                        <TableCell>{assetData.status || "N/A"}</TableCell>
-                                    </TableRow>
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Model No</b></TableCell>
-                                        <TableCell>{assetData.modelNo || "N/A"}</TableCell>
-                                    </TableRow>
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Description</b></TableCell>
-                                        <TableCell>{assetData.description || "N/A"}</TableCell>
-                                    </TableRow>
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Location</b></TableCell>
-                                        <TableCell>{assetData.location || "N/A"}</TableCell>
-                                    </TableRow>
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Building</b></TableCell>
-                                        <TableCell>{assetData.building || "N/A"}</TableCell>
-                                    </TableRow>
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Room</b></TableCell>
-                                        <TableCell>{assetData.room || "N/A"}</TableCell>
-                                    </TableRow>
-                                    <TableRow sx={dashboardStyles.tableRow}>
-                                        <TableCell><b>Department</b></TableCell>
-                                        <TableCell>{assetData.department || "N/A"}</TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
-                        </Paper>
-                    ) : (
-                        <Typography>No asset details available</Typography>
-                    )}
-                </Box>
             </Box>
         </Box >
     );
