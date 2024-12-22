@@ -24,8 +24,13 @@ const assetSchema = new mongoose.Schema(
     building: { type: String, required: true },
     room: { type: String, required: true },
     department: { type: String, required: true },
-    assetCount: { type: Number, default: 0 },
     uniqueId: { type: Number, unique: true },
+    qrCode: { type: String, unique: true }, // Unique QR Code field
+    status: {
+      type: [String],
+      enum: ["Check Out", "Check In"],
+      default: ["Check Out"],
+    },
 
     computerDetails: {
       os: { type: String },
@@ -50,14 +55,15 @@ const assetSchema = new mongoose.Schema(
   }
 );
 
+// Auto-increment uniqueId using the Counter model
 assetSchema.pre("save", async function (next) {
   if (this.isNew) {
     try {
       // Increment counter for Hardware model
       const counter = await Counter.findOneAndUpdate(
-        { modelName: "Hardware" }, 
-        { $inc: { count: 1 } }, 
-        { new: true, upsert: true } 
+        { modelName: "Hardware" },
+        { $inc: { count: 1 } },
+        { new: true, upsert: true }
       );
 
       if (!counter) {
@@ -66,7 +72,7 @@ assetSchema.pre("save", async function (next) {
         );
       }
 
-      this.uniqueId = counter.count; 
+      this.uniqueId = counter.count;
       next();
     } catch (error) {
       console.error("Error generating unique ID:", error.message);
@@ -76,4 +82,5 @@ assetSchema.pre("save", async function (next) {
     next();
   }
 });
+
 export default mongoose.model("Hardware", assetSchema);
