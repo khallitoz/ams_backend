@@ -2,121 +2,143 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import {
-    Box,
-    Typography,
-    CircularProgress,
-    Breadcrumbs,
-    Divider,
+  Box,
+  Typography,
+  CircularProgress,
+  Breadcrumbs,
+  Divider,
 } from "@mui/material";
 import { useAppContext } from "../../../context/AppContext";
 import Sidebar from "@/components/Sidebar";
 import AssetTabBar from "@/components/AssetTabBar";
+import HomeIcon from "@mui/icons-material/Home";
+import InventoryIcon from "@mui/icons-material/Inventory";
 
 const dashboardStyles = {
-    container: {
-        display: "flex",
-        marginTop: 0
-    },
-    content: {
-        width: "100%",
-        marginLeft: "290px",
-        marginTop: "120px", // Matches the height of AssetTabBar + Breadcrumbs
-        display: "flex",
-        flexDirection: "column" as const,
-        backgroundColor: "white",
-        borderTop: "1px solid #d5d5d5",
-        gap: "20px",
-        padding: "20px",
-        height: "calc(100vh - 120px)", // Full viewport height minus fixed elements
-        overflowY: "auto", // Allows scrolling for content
+  container: {
+    display: "flex",
+    marginTop: 0,
+  },
+  content: {
+    width: "82%",
+    marginLeft: "18%",
+    marginTop: "60px",
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "20px",
+    padding: "20px",
+    overflowY: "auto",
+  },
+  link: {
+    fontSize: "20px",
 
-    },
-    link: {
-        textDecoration: "none",
-        fontSize: "20px",
-        color: "#483D8B",
-        "&:hover": {
-            textDecoration: "underline",
-        },
-    },
-    breadcrumb: {
-        marginTop: "20px"
-    }
+    backgroundColor: "#D9DAE5",
+    borderRadius: "8px",
+    color: "black",
+    padding: "3px",
+    textAlign: "center",
 
+    "&:hover": {},
+  },
+};
+const breadcrumbStyles = {
+  breadcrumbContainer: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+  },
+  breadcrumbItem: {
+    display: "flex",
+    alignItems: "center",
+    padding: "4px 12px",
+    borderRadius: "16px",
+    backgroundColor: "#D9DAE5",
+    color: "#5A4FCF",
+    fontSize: "18px",
+    fontWeight: "500",
+    textDecoration: "none",
+  },
+  activeItem: {
+    backgroundColor: "#5A4FCF",
+    color: "white",
+  },
+  separator: {
+    color: "#C4C4C4",
+    fontSize: "16px",
+  },
 };
 
 const SingleAssetDetails: React.FC = () => {
-    const router = useRouter();
-    const { assetId } = router.query;
-    const { getSingleAssetDetail, singleStateData } = useAppContext();
-    const [loading, setLoading] = useState<boolean>(true);
+  const router = useRouter();
+  const { assetId } = router.query;
+  const { getSingleAssetDetail, singleStateData } = useAppContext();
+  const [loading, setLoading] = useState<boolean>(true);
 
-
-    // Fetch single asset data
-    const getSingleAssetData = async (id: string | string[] | undefined) => {
-        if (!id || Array.isArray(id)) return;
-        try {
-            setLoading(true);
-            const data = await getSingleAssetDetail(id);
-            setAssetData(data);
-        } catch (error) {
-            console.error("Error fetching single asset data:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-
-    useEffect(() => {
-        if (assetId) {
-            getSingleAssetData(assetId);
-        }
-    }, [assetId]);
-
-    if (loading) {
-        return (
-            <CircularProgress
-                sx={{
-                    position: "fixed",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                }}
-            />
-        );
+  // Fetch single asset data
+  const getSingleAssetData = async (id: string | string[] | undefined) => {
+    if (!id || Array.isArray(id)) return;
+    try {
+      setLoading(true);
+      const data = await getSingleAssetDetail(id);
+      setAssetData(data);
+    } catch (error) {
+      console.error("Error fetching single asset data:", error);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
+    if (assetId) {
+      getSingleAssetData(assetId);
+    }
+  }, [assetId]);
+
+  if (loading) {
     return (
-        <Box sx={dashboardStyles.container}>
-            <Sidebar />
-            <Box sx={dashboardStyles.content}>
-                <Box sx={{
-                    width: "83%",
-                    position: "fixed",
-                    backgroundColor: "white",
-                    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-                }}>
-                    {/* Breadcrumbs */}
-                    <Breadcrumbs aria-label="breadcrumb" sx={dashboardStyles.breadcrumb} >
-                        <Link href="/user/dashboard" passHref>
-                            <Typography sx={dashboardStyles.link}>DASHBOARD</Typography>
-                        </Link>
-                        <Link href="/user/allassets" passHref>
-                            <Typography sx={dashboardStyles.link} variant="h4">ALL ASSETS</Typography>
-                        </Link>
-                        <Typography sx={dashboardStyles.link}>
-                            ASSET NUMBER {singleStateData.assetCount}
-                        </Typography>
-                    </Breadcrumbs>
-
-
-                    <AssetTabBar />
-                    <Divider />
-                </Box>
-
-            </Box>
-        </Box >
+      <CircularProgress
+        sx={{
+          position: "fixed",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+        }}
+      />
     );
+  }
+
+  return (
+    <Box sx={dashboardStyles.container}>
+      <Sidebar />
+      <Box sx={dashboardStyles.content}>
+        {/* Breadcrumbs */}
+        <Breadcrumbs
+          aria-label="breadcrumb"
+          separator={<span style={breadcrumbStyles.separator}>/</span>}
+        >
+          <Link href="/" style={breadcrumbStyles.breadcrumbItem}>
+            <HomeIcon sx={{ marginRight: "4px", fontSize: "16px" }} />
+            Home
+          </Link>
+          <Link href="/user/allassets" style={breadcrumbStyles.breadcrumbItem}>
+            <InventoryIcon sx={{ marginRight: "4px", fontSize: "16px" }} />
+            All Assets
+          </Link>
+          <Typography
+            style={{
+              ...breadcrumbStyles.breadcrumbItem,
+              ...breadcrumbStyles.activeItem,
+            }}
+          >
+            Asset Number {singleStateData.uniqueId}
+          </Typography>
+        </Breadcrumbs>
+
+        <AssetTabBar />
+        <Divider />
+      </Box>
+    </Box>
+  );
 };
 
 export default SingleAssetDetails;

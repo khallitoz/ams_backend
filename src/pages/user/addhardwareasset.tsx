@@ -11,24 +11,6 @@ const dashboardDesign = {
   display: "flex",
 };
 
-const cardDesign = {
-  width: 230,
-  height: 100,
-  padding: 2,
-  backgroundColor: "#fff",
-  borderRadius: "8px",
-  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "flex-start",
-  alignItems: "center",
-};
-
-const TimerDesigns = {
-  fontSize: "20px",
-  fontWeight: "bold",
-};
-
 const HardwareAsset: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
@@ -71,7 +53,7 @@ const HardwareAsset: React.FC = () => {
       <Box
         sx={{
           width: "100%",
-          marginLeft: "290px",
+          marginLeft: "18%",
           display: "flex",
           flexDirection: "column",
           backgroundColor: "white",

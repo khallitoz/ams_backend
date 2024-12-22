@@ -25,22 +25,22 @@ import { useDebounce } from "@/utils/useDebounce";
 const dashboardStyles = {
   container: {
     display: "flex",
+    flexDirection: "row",
+    width: "100%",
   },
   content: {
-    width: "100%",
-    marginLeft: "290px",
-    marginTop: "100px",
+    width: "82%",
+    marginLeft: "18%",
+    marginTop: "80px",
     display: "flex",
     flexDirection: "column" as const,
-    backgroundColor: "white",
-    borderTop: "1px solid #d5d5d5",
     gap: "20px",
     padding: "20px",
   },
   table: {
     border: "1px solid #e0e0e0",
     borderRadius: "8px",
-    overflow: "hidden",
+    overflowY: "auto",
     boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
     "& .MuiTableHead-root": {
       "& .MuiTableCell-root": {
@@ -66,11 +66,10 @@ const dashboardStyles = {
   },
   searchContainer: {
     display: "flex",
-    justifyContent: "flex-end",
-    marginBottom: "",
+    marginBottom: "0",
   },
   searchInput: {
-    width: "20%",
+    width: "40%",
     "& .MuiInputBase-root": {
       borderBottom: "2px solid #483D8B",
     },
@@ -98,14 +97,19 @@ const AllAssets: React.FC = () => {
     }
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const newRowsPerPage = parseInt(event.target.value, 10);
     setPage(0); // Reset to the first page
     setRowsPerPage(newRowsPerPage);
     getDetails(0, newRowsPerPage); // Fetch data with new configuration
   };
 
-  const getDetails = async (currentPage = page, currentRowsPerPage = rowsPerPage) => {
+  const getDetails = async (
+    currentPage = page,
+    currentRowsPerPage = rowsPerPage
+  ) => {
     setLoading(true);
     try {
       const { data: assets, totalAssets } = await getAllAssetDetails(
@@ -127,7 +131,6 @@ const AllAssets: React.FC = () => {
     getDetails(page, rowsPerPage, debouncedSearchQuery); // Fetch data whenever debouncedSearchQuery, page, or rowsPerPage changes
   }, [page, rowsPerPage, debouncedSearchQuery]);
 
-
   return (
     <Box sx={dashboardStyles.container}>
       <Sidebar />
@@ -139,30 +142,39 @@ const AllAssets: React.FC = () => {
           <TabBar totalAssets={totalAssets} />
         </Box>
 
-        <Box sx={dashboardStyles.searchContainer}>
-          <TextField
-            placeholder="Search by Asset Name"
-            variant="outlined"
-            onChange={handleSearch}
-            value={searchQuery}
-            onKeyDown={handleKeyDown}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-            sx={dashboardStyles.searchInput}
-          />
-        </Box>
-
         <Box>
           {loading ? (
             <CircularProgress />
           ) : (
             <>
-              <h1>{totalAssets} Asset{totalAssets !== 1 && "s"} found</h1>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  marginBottom: "20px",
+                }}
+              >
+                <Typography variant="h4">
+                  {totalAssets} Asset{totalAssets !== 1 && "s"} found
+                </Typography>
+
+                <TextField
+                  placeholder="Search by Asset Name"
+                  variant="outlined"
+                  onChange={handleSearch}
+                  value={searchQuery}
+                  onKeyDown={handleKeyDown}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={dashboardStyles.searchInput}
+                />
+              </Box>
               <TableContainer component={Paper} sx={dashboardStyles.table}>
                 <Table>
                   <TableHead>
@@ -184,7 +196,7 @@ const AllAssets: React.FC = () => {
                         legacyBehavior
                       >
                         <TableRow hover component="a">
-                          <TableCell>{asset.assetCount}</TableCell>
+                          <TableCell>{asset.uniqueId}</TableCell>
                           <TableCell>{asset.assetName}</TableCell>
                           <TableCell>{asset.assetType}</TableCell>
                           <TableCell>{asset.category || "N/A"}</TableCell>
@@ -214,6 +226,3 @@ const AllAssets: React.FC = () => {
 };
 
 export default AllAssets;
-
-
-

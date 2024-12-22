@@ -29,5 +29,5 @@ const TabBar: React.FC = ({ totalAssets }) => {
       {/* {value === 2 && <Inservice />} */}
     </Box>
   );
-}
-export default TabBar
+};
+export default TabBar;

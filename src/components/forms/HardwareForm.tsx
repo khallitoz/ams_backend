@@ -301,283 +301,285 @@ const HardwareForm: React.FC = () => {
   };
 
   return (
-    <form>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          padding: "20px 0",
-          marginTop: "30px",
-        }}
-      >
-        <Typography
-          variant="h5"
-          sx={{ marginBottom: "20px", fontWeight: "bold" }}
-        >
-          Add New Hardware Asset
-        </Typography>
-        <Button
-          variant="contained"
-          onClick={uploadRequest}
-          sx={{ backgroundColor: "#483D8B", width: "200px" }}
-        >
-          SUBMIT
-        </Button>
-      </Box>
-
-      <FormSection title="Asset Info">
+    <Box sx={{ width: "82%" }}>
+      <form>
         <Box
           sx={{
             display: "flex",
-            flexWrap: "wrap",
-            gap: "16px",
+            justifyContent: "space-between",
+            padding: "20px 0",
+            marginTop: "30px",
           }}
         >
-          {/* Asset Name */}
-          <StyledTextField
-            label="Asset Name"
-            fullWidth
-            sx={textFieldStyling}
-            name="assetName"
-            value={values.assetName}
-            onChange={handleChange}
-            error={errors.assetName}
-          />
-          <FormControl
-            fullWidth
-            error={!!errors.assetType} // Highlights the field in red if there's an error
-            sx={{
-              flex: "1 1 calc(33.33% - 16px)", // Consistent flexbox rules
-              "& .MuiOutlinedInput-root": {
-                height: "46px", // Matches StyledTextField height
-                padding: "0px", // Ensure padding doesn't affect alignment
-              },
-              "& .MuiInputLabel-root": {
-                backgroundColor: "white", // Prevent overlap with the border
-                padding: "0 4px", // Add padding to give space around the label
-                transform: "translate(14px, 14px) scale(1)", // Initial position of label
-                transition: "all 0.2s ease-out", // Smooth transition for label movement
-              },
-              "& .Mui-focused .MuiInputLabel-root, & .MuiInputLabel-shrink": {
-                transform: "translate(14px, -6px) scale(0.75)", // Position when focused or populated
-              },
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: "rgba(0, 0, 0, 0.23)", // Default border color
-              },
-              "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
-                borderColor: "#483D8B", // Border color on focus
-              },
-            }}
+          <Typography
+            variant="h5"
+            sx={{ marginBottom: "20px", fontWeight: "bold" }}
           >
-            <InputLabel>Asset Type</InputLabel>
-            <Select
-              name="assetType"
-              value={values.assetType} // Controlled component
-              onChange={handleChange} // Update state on selection change
-              sx={{
-                "& .MuiSelect-select": {
-                  padding: "8px", // Consistent padding with StyledTextField
-                },
-              }}
-            >
-              {assetTypes.map((type, index) => (
-                <MenuItem key={index} value={type}>
-                  {type}
-                </MenuItem>
-              ))}
-            </Select>
-            {errors.assetType && (
-              <FormHelperText>{errors.assetType}</FormHelperText> // Show error message
-            )}
-          </FormControl>
-
-          <FormControl
-            fullWidth
-            error={!!errors.condition} // Highlights the field in red if there's an error
-            sx={{
-              flex: "1 1 calc(33.33% - 16px)", // Consistent flexbox rules
-              "& .MuiOutlinedInput-root": {
-                height: "46px", // Matches StyledTextField height
-                padding: "0px", // Ensure padding doesn't affect alignment
-              },
-              "& .MuiInputLabel-root": {
-                backgroundColor: "white", // Prevent overlap with the border
-                padding: "0 4px", // Add padding to give space around the label
-                transform: "translate(14px, 14px) scale(1)", // Initial position of label
-                transition: "all 0.2s ease-out", // Smooth transition for label movement
-              },
-              "& .Mui-focused .MuiInputLabel-root, & .MuiInputLabel-shrink": {
-                transform: "translate(14px, -6px) scale(0.75)", // Position when focused or populated
-              },
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: "rgba(0, 0, 0, 0.23)", // Default border color
-              },
-              "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
-                borderColor: "#483D8B", // Border color on focus
-              },
-            }}
+            Add New Hardware Asset
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={uploadRequest}
+            sx={{ backgroundColor: "#483D8B", width: "200px" }}
           >
-            <InputLabel>Condition</InputLabel>
-            <Select
-              name="condition"
-              value={values.condition} // Controlled component
-              onChange={handleChange} // Update state on selection change
-              sx={{
-                "& .MuiSelect-select": {
-                  padding: "8px", // Consistent padding with StyledTextField
-                },
-              }}
-            >
-              {conditions.map((type, index) => (
-                <MenuItem key={index} value={type}>
-                  {type}
-                </MenuItem>
-              ))}
-            </Select>
-            {errors.condition && (
-              <FormHelperText>{errors.condition}</FormHelperText> // Show error message
-            )}
-          </FormControl>
-          <StyledTextField
-            label="Price"
-            fullWidth
-            name="price"
-            sx={textFieldStyling}
-            value={values.price}
-            onChange={handleChange}
-            error={errors.price}
-          />
-          <StyledTextField
-            label="Warranty Date"
-            type="date"
-            name="warrantyDate"
-            fullWidth
-            sx={textFieldStyling}
-            InputLabelProps={{ shrink: true }}
-            value={values.warrantyDate}
-            onChange={handleChange}
-            error={errors.warrantyDate}
-          />
-          <StyledTextField
-            label="Warranty Type"
-            name="warrantyType"
-            fullWidth
-            sx={textFieldStyling}
-            value={values.warrantyType}
-            onChange={handleChange}
-            error={errors.warrantyType}
-          />
-          <StyledTextField
-            label="Category"
-            name="category"
-            fullWidth
-            sx={textFieldStyling}
-            value={values.category}
-            onChange={handleChange}
-            error={errors.category}
-          />
-          <StyledTextField
-            label="Vendor"
-            name="vendor"
-            fullWidth
-            sx={textFieldStyling}
-            value={values.vendor}
-            onChange={handleChange}
-            error={errors.vendor}
-          />
-          <StyledTextField
-            label="Status"
-            name="status"
-            fullWidth
-            sx={textFieldStyling}
-            value={values.status}
-            onChange={handleChange}
-            error={errors.status}
-          />
-          <StyledTextField
-            label="Model Number"
-            name="modelNo"
-            fullWidth
-            sx={textFieldStyling}
-            value={values.modelNo}
-            onChange={handleChange}
-            error={errors.modelNo}
-          />
-          <StyledTextField
-            label="Model"
-            name="model"
-            fullWidth
-            sx={textFieldStyling}
-            value={values.model}
-            onChange={handleChange}
-            error={errors.model}
-          />
-          <StyledTextField
-            label="Description"
-            name="description"
-            fullWidth
-            sx={textFieldStyling}
-            value={values.description}
-            onChange={handleChange}
-            error={errors.description}
-          />
-          <Box sx={textFieldStyling}>
-            <Typography>Images</Typography>
-            <input
-              type="file"
-              multiple
-              onChange={(e) => handleImageChange(e, "images")}
-            />
-          </Box>
-          <Box sx={textFieldStyling}>
-            <Typography>Invoice</Typography>
-            <input
-              type="file"
-              multiple
-              onChange={(e) => handleImageChange(e, "invoices")}
-            />
-          </Box>
-          <Box sx={textFieldStyling}>
-            <Typography>User Manual</Typography>
-            <input
-              type="file"
-              multiple
-              onChange={(e) => handleImageChange(e, "manuals")}
-            />
-          </Box>
+            SUBMIT
+          </Button>
         </Box>
-      </FormSection>
 
-      <LocationForm
-        values={values}
-        handleChange={handleChange}
-        errors={errors}
-      />
+        <FormSection title="Asset Info">
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "16px",
+            }}
+          >
+            {/* Asset Name */}
+            <StyledTextField
+              label="Asset Name"
+              fullWidth
+              sx={textFieldStyling}
+              name="assetName"
+              value={values.assetName}
+              onChange={handleChange}
+              error={errors.assetName}
+            />
+            <FormControl
+              fullWidth
+              error={!!errors.assetType} // Highlights the field in red if there's an error
+              sx={{
+                flex: "1 1 calc(33.33% - 16px)", // Consistent flexbox rules
+                "& .MuiOutlinedInput-root": {
+                  height: "46px", // Matches StyledTextField height
+                  padding: "0px", // Ensure padding doesn't affect alignment
+                },
+                "& .MuiInputLabel-root": {
+                  backgroundColor: "white", // Prevent overlap with the border
+                  padding: "0 4px", // Add padding to give space around the label
+                  transform: "translate(14px, 14px) scale(1)", // Initial position of label
+                  transition: "all 0.2s ease-out", // Smooth transition for label movement
+                },
+                "& .Mui-focused .MuiInputLabel-root, & .MuiInputLabel-shrink": {
+                  transform: "translate(14px, -6px) scale(0.75)", // Position when focused or populated
+                },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "rgba(0, 0, 0, 0.23)", // Default border color
+                },
+                "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#483D8B", // Border color on focus
+                },
+              }}
+            >
+              <InputLabel>Asset Type</InputLabel>
+              <Select
+                name="assetType"
+                value={values.assetType} // Controlled component
+                onChange={handleChange} // Update state on selection change
+                sx={{
+                  "& .MuiSelect-select": {
+                    padding: "8px", // Consistent padding with StyledTextField
+                  },
+                }}
+              >
+                {assetTypes.map((type, index) => (
+                  <MenuItem key={index} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.assetType && (
+                <FormHelperText>{errors.assetType}</FormHelperText> // Show error message
+              )}
+            </FormControl>
 
-      {values.assetType === "Computer" && (
-        <ComputerDetailsForm
+            <FormControl
+              fullWidth
+              error={!!errors.condition} // Highlights the field in red if there's an error
+              sx={{
+                flex: "1 1 calc(33.33% - 16px)", // Consistent flexbox rules
+                "& .MuiOutlinedInput-root": {
+                  height: "46px", // Matches StyledTextField height
+                  padding: "0px", // Ensure padding doesn't affect alignment
+                },
+                "& .MuiInputLabel-root": {
+                  backgroundColor: "white", // Prevent overlap with the border
+                  padding: "0 4px", // Add padding to give space around the label
+                  transform: "translate(14px, 14px) scale(1)", // Initial position of label
+                  transition: "all 0.2s ease-out", // Smooth transition for label movement
+                },
+                "& .Mui-focused .MuiInputLabel-root, & .MuiInputLabel-shrink": {
+                  transform: "translate(14px, -6px) scale(0.75)", // Position when focused or populated
+                },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "rgba(0, 0, 0, 0.23)", // Default border color
+                },
+                "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#483D8B", // Border color on focus
+                },
+              }}
+            >
+              <InputLabel>Condition</InputLabel>
+              <Select
+                name="condition"
+                value={values.condition} // Controlled component
+                onChange={handleChange} // Update state on selection change
+                sx={{
+                  "& .MuiSelect-select": {
+                    padding: "8px", // Consistent padding with StyledTextField
+                  },
+                }}
+              >
+                {conditions.map((type, index) => (
+                  <MenuItem key={index} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.condition && (
+                <FormHelperText>{errors.condition}</FormHelperText> // Show error message
+              )}
+            </FormControl>
+            <StyledTextField
+              label="Price"
+              fullWidth
+              name="price"
+              sx={textFieldStyling}
+              value={values.price}
+              onChange={handleChange}
+              error={errors.price}
+            />
+            <StyledTextField
+              label="Warranty Date"
+              type="date"
+              name="warrantyDate"
+              fullWidth
+              sx={textFieldStyling}
+              InputLabelProps={{ shrink: true }}
+              value={values.warrantyDate}
+              onChange={handleChange}
+              error={errors.warrantyDate}
+            />
+            <StyledTextField
+              label="Warranty Type"
+              name="warrantyType"
+              fullWidth
+              sx={textFieldStyling}
+              value={values.warrantyType}
+              onChange={handleChange}
+              error={errors.warrantyType}
+            />
+            <StyledTextField
+              label="Category"
+              name="category"
+              fullWidth
+              sx={textFieldStyling}
+              value={values.category}
+              onChange={handleChange}
+              error={errors.category}
+            />
+            <StyledTextField
+              label="Vendor"
+              name="vendor"
+              fullWidth
+              sx={textFieldStyling}
+              value={values.vendor}
+              onChange={handleChange}
+              error={errors.vendor}
+            />
+            <StyledTextField
+              label="Status"
+              name="status"
+              fullWidth
+              sx={textFieldStyling}
+              value={values.status}
+              onChange={handleChange}
+              error={errors.status}
+            />
+            <StyledTextField
+              label="Model Number"
+              name="modelNo"
+              fullWidth
+              sx={textFieldStyling}
+              value={values.modelNo}
+              onChange={handleChange}
+              error={errors.modelNo}
+            />
+            <StyledTextField
+              label="Model"
+              name="model"
+              fullWidth
+              sx={textFieldStyling}
+              value={values.model}
+              onChange={handleChange}
+              error={errors.model}
+            />
+            <StyledTextField
+              label="Description"
+              name="description"
+              fullWidth
+              sx={textFieldStyling}
+              value={values.description}
+              onChange={handleChange}
+              error={errors.description}
+            />
+            <Box sx={textFieldStyling}>
+              <Typography>Images</Typography>
+              <input
+                type="file"
+                multiple
+                onChange={(e) => handleImageChange(e, "images")}
+              />
+            </Box>
+            <Box sx={textFieldStyling}>
+              <Typography>Invoice</Typography>
+              <input
+                type="file"
+                multiple
+                onChange={(e) => handleImageChange(e, "invoices")}
+              />
+            </Box>
+            <Box sx={textFieldStyling}>
+              <Typography>User Manual</Typography>
+              <input
+                type="file"
+                multiple
+                onChange={(e) => handleImageChange(e, "manuals")}
+              />
+            </Box>
+          </Box>
+        </FormSection>
+
+        <LocationForm
           values={values}
           handleChange={handleChange}
           errors={errors}
         />
-      )}
 
-      {values.assetType === "Switch" && (
-        <SwitchForm
-          values={values}
-          handleChange={handleChange}
-          errors={errors}
-        />
-      )}
+        {values.assetType === "Computer" && (
+          <ComputerDetailsForm
+            values={values}
+            handleChange={handleChange}
+            errors={errors}
+          />
+        )}
 
-      {values.assetType === "Router" && (
-        <RouterDetailsForm
-          values={values}
-          handleChange={handleChange}
-          errors={errors}
-        />
-      )}
-    </form>
+        {values.assetType === "Switch" && (
+          <SwitchForm
+            values={values}
+            handleChange={handleChange}
+            errors={errors}
+          />
+        )}
+
+        {values.assetType === "Router" && (
+          <RouterDetailsForm
+            values={values}
+            handleChange={handleChange}
+            errors={errors}
+          />
+        )}
+      </form>
+    </Box>
   );
 };
 
