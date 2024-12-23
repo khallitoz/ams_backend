@@ -41,7 +41,7 @@ const upload = multer({
 });
 
 export const uploadFiles = upload.fields([
-  { name: "images", maxCount: 10 }, // Accept multiple images
-  { name: "invoices", maxCount: 10 }, // Accept multiple invoices
-  { name: "manuals", maxCount: 10 }, // Accept multiple manuals
+  { name: "images", maxCount: 5 }, // Accept multiple images
+  { name: "invoices", maxCount: 5 }, // Accept multiple invoices
+  { name: "manuals", maxCount: 5 }, // Accept multiple manuals
 ]);
