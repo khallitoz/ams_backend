@@ -9,10 +9,11 @@ import jwt_decode from "jwt-decode";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { AppReducer } from "./AppReducer"; // Make sure this is typed if necessary
-import { UPDATE_SINGLE_DETAILS_STATE } from "./actions"
+import { UPDATE_SINGLE_DETAILS_STATE } from "./actions";
 import CircularProgress from "@mui/material/CircularProgress";
 import { toast } from "react-toastify";
 import { msalInstance } from "../utils/msalconfig";
+import SingleAssetDetails from "@/pages/user/singleassetdetails/[assetId]";
 
 // Define the initial state type
 interface StateType {
@@ -43,9 +44,15 @@ interface AppContextType extends StateType {
   handleGoogleLogin: (googleData: any) => Promise<void>;
   logUserOff: () => Promise<void>;
   addHardwareDetails: (formData: FormData) => Promise<boolean>;
-  getAllAssetDetails: (page: number, limit: number, searchQuery: string) => Promise<any>;
+  getAllAssetDetails: (
+    page: number,
+    limit: number,
+    searchQuery: string
+  ) => Promise<any>;
   getSingleAssetDetail: (id: string) => Promise<any>;
   searchAsset: (searchQuery: string) => Promise<any>;
+  submitAssignedAsset: (submissionData: string[]) => Promise<any>;
+  fetchAssignedDetails: (id: string) => Promise<any>;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -177,7 +184,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
-  const getAllAssetDetails = async (page = 1, limit = 10, searchQuery = ""): Promise<any> => {
+  const getAllAssetDetails = async (
+    page = 1,
+    limit = 10,
+    searchQuery = ""
+  ): Promise<any> => {
     const token = localStorage.getItem("token");
     const config = {
       headers: {
@@ -206,9 +217,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
-
   const getSingleAssetDetail = async (assetId: string): Promise<any> => {
-    console.log(assetId);
     const token = localStorage.getItem("token");
     const config = {
       headers: {
@@ -224,11 +233,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       const details = allSingleAssetDetails.data.data;
       dispatch({
-        type: UPDATE_SINGLE_DETAILS_STATE, payload: {
-          details: details
-        }
-      })
-
+        type: UPDATE_SINGLE_DETAILS_STATE,
+        payload: {
+          details: details,
+        },
+      });
     } catch (error: any) {
       toast.error(error.message, {
         position: "top-center",
@@ -268,6 +277,93 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
+  const submitAssignedAsset = async (submissionData: any): Promise<any> => {
+    const token = localStorage.getItem("token");
+    console.log(submissionData);
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/v1/amsservices/assignasset",
+        submissionData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("Hardware assigned successfully", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        return true;
+      }
+      return false;
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        const errorMessages: string[] = error.response.data.errors || [];
+        errorMessages.forEach((err) =>
+          toast.error(err, {
+            position: "top-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          })
+        );
+      } else {
+        toast.error(error.message, {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+      return false;
+    }
+  };
+
+  const fetchAssignedDetails = async (id: string): Promise<any> => {
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    try {
+      const fetchedDetail = await axios.get(
+        `http://localhost:5000/api/v1/amsservices/fetchassignasset?assetId=${id}`,
+        config
+      );
+
+      return fetchedDetail.data.data; // Return fetched details from the response
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Failed to fetch assigned details!",
+        {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
+
+      // Return null or handle the error properly
+      return null;
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -280,6 +376,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         getAllAssetDetails,
         getSingleAssetDetail,
         searchAsset,
+        submitAssignedAsset,
+        fetchAssignedDetails,
       }}
     >
       {children}

@@ -85,7 +85,7 @@ const AllAssets: React.FC = () => {
   const [page, setPage] = useState<number>(0);
   const [rowsPerPage, setRowsPerPage] = useState<number>(10);
 
-  const debouncedSearchQuery = useDebounce(searchQuery, 200);
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
   };

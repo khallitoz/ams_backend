@@ -20,7 +20,7 @@ const tableDesign = {
     width: "100%", // Ensure full width
     maxHeight: "600px", // Set a fixed height for the scrollable area
     overflowY: "auto", // Enable scrolling
-    border: "1px solid #d5d5d5", // Optional: Add a border for better visibility
+
   },
   assetInfoRow: {
     backgroundColor: "#483D8B",

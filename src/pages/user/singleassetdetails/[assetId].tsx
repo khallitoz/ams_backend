@@ -80,7 +80,6 @@ const SingleAssetDetails: React.FC = () => {
     try {
       setLoading(true);
       const data = await getSingleAssetDetail(id);
-      setAssetData(data);
     } catch (error) {
       console.error("Error fetching single asset data:", error);
     } finally {

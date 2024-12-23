@@ -7,10 +7,13 @@ const assetDesign = {
     height: "100vh",
     padding: "20px",
     backgroundColor: "#f4f6f8",
-    maxHeight: "700px",
-    overflowY: "auto",
+
 };
 
+const assetContent = {
+    maxHeight: "700px",
+    overflowY: "auto",
+}
 const sectionHeader = {
     marginBottom: "10px",
     fontWeight: "bold",
@@ -58,6 +61,8 @@ const pdfStyle = {
     border: "none",
 };
 
+
+
 const AssetInfo: React.FC = () => {
     const { singleStateData } = useAppContext();
 
@@ -103,82 +108,84 @@ const AssetInfo: React.FC = () => {
 
     return (
         <Box sx={assetDesign}>
-            <Typography variant="h5" gutterBottom>
-                Asset Attachments
-            </Typography>
-
-            {/* Images Section */}
-            <Box sx={attachmentContainer}>
-                <Typography sx={sectionHeader} variant="h5">
-                    Images
+            <Box sx={assetContent} >
+                <Typography variant="h5" gutterBottom>
+                    Asset Attachments
                 </Typography>
-                {singleStateData?.images && singleStateData.images.length > 0 ? (
-                    singleStateData.images.map((image: string, index: number) => (
-                        <Box sx={attachmentCard} key={index}>
-                            {renderFile(image)}
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                sx={buttonStyle}
-                                onClick={() => handleDownload(image, "image", index)}
-                            >
-                                Download
-                            </Button>
-                        </Box>
-                    ))
-                ) : (
-                    <Typography>No images attached</Typography>
-                )}
-            </Box>
 
-            <Box sx={{ margin: "20px 0" }} />
+                {/* Images Section */}
+                <Box sx={attachmentContainer}>
+                    <Typography sx={sectionHeader} variant="h5">
+                        Images
+                    </Typography>
+                    {singleStateData?.images && singleStateData.images.length > 0 ? (
+                        singleStateData.images.map((image: string, index: number) => (
+                            <Box sx={attachmentCard} key={index}>
+                                {renderFile(image)}
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    sx={buttonStyle}
+                                    onClick={() => handleDownload(image, "image", index)}
+                                >
+                                    Download
+                                </Button>
+                            </Box>
+                        ))
+                    ) : (
+                        <Typography>No images attached</Typography>
+                    )}
+                </Box>
 
-            {/* Invoices Section */}
-            <Box sx={attachmentContainer}>
-                <Typography sx={sectionHeader} variant="h5">
-                    Invoices
-                </Typography>
-                {singleStateData?.invoices && singleStateData.invoices.length > 0 ? (
-                    singleStateData.invoices.map((invoice: string, index: number) => (
-                        <Box sx={attachmentCard} key={index}>
-                            {renderFile(invoice)}
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                sx={buttonStyle}
-                                onClick={() => handleDownload(invoice, "invoice", index)}
-                            >
-                                Download
-                            </Button>
-                        </Box>
-                    ))
-                ) : (
-                    <Typography>No invoices attached</Typography>
-                )}
-            </Box>
+                <Box sx={{ margin: "20px 0" }} />
 
-            <Box sx={{ margin: "20px 0" }} />
+                {/* Invoices Section */}
+                <Box sx={attachmentContainer}>
+                    <Typography sx={sectionHeader} variant="h5">
+                        Invoices
+                    </Typography>
+                    {singleStateData?.invoices && singleStateData.invoices.length > 0 ? (
+                        singleStateData.invoices.map((invoice: string, index: number) => (
+                            <Box sx={attachmentCard} key={index}>
+                                {renderFile(invoice)}
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    sx={buttonStyle}
+                                    onClick={() => handleDownload(invoice, "invoice", index)}
+                                >
+                                    Download
+                                </Button>
+                            </Box>
+                        ))
+                    ) : (
+                        <Typography>No invoices attached</Typography>
+                    )}
+                </Box>
 
-            {/* Manuals Section */}
-            <Box sx={attachmentContainer}>
-                <Typography sx={sectionHeader}>Manuals</Typography>
-                {singleStateData?.manuals && singleStateData.manuals.length > 0 ? (
-                    singleStateData.manuals.map((manual: string, index: number) => (
-                        <Box sx={attachmentCard} key={index}>
-                            {renderFile(manual)}
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                sx={buttonStyle}
-                                onClick={() => handleDownload(manual, "manual", index)}
-                            >
-                                Download
-                            </Button>
-                        </Box>
-                    ))
-                ) : (
-                    <Typography>No manuals attached</Typography>
-                )}
+                <Box sx={{ margin: "20px 0" }} />
+
+                {/* Manuals Section */}
+                <Box sx={attachmentContainer}>
+                    <Typography sx={sectionHeader}>Manuals</Typography>
+                    {singleStateData?.manuals && singleStateData.manuals.length > 0 ? (
+                        singleStateData.manuals.map((manual: string, index: number) => (
+                            <Box sx={attachmentCard} key={index}>
+                                {renderFile(manual)}
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    sx={buttonStyle}
+                                    onClick={() => handleDownload(manual, "manual", index)}
+                                >
+                                    Download
+                                </Button>
+                            </Box>
+                        ))
+                    ) : (
+                        <Typography>No manuals attached</Typography>
+                    )}
+                </Box>
             </Box>
         </Box>
     );
