@@ -21,7 +21,7 @@ import assetTypes from "@/utils/assetTypes";
 import conditions from "@/utils/conditions";
 import LocationForm from "./LocationForm";
 import { useAppContext } from "../../context/AppContext";
-
+import { useRouter } from "next/router";
 const textFieldStyling = {
   flex: {
     lg: "1 1 calc(33.33% - 16px)",
@@ -140,6 +140,9 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
   const [values, setValues] = useState<HardwareDetails>({
     ...initialHardwareDetails,
     ...initialValues,
+    warrantyDate: initialValues?.warrantyDate
+      ? new Date(initialValues.warrantyDate).toISOString().split("T")[0]
+      : "",
     computerDetails: {
       ...initialHardwareDetails.computerDetails,
       ...(initialValues?.computerDetails || {}),
@@ -153,6 +156,7 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
       ...(initialValues?.switchDetails || {}),
     },
   });
+  const router = useRouter();
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [fileUploads, setFileUploads] = useState<FileUploads>({
     images: [],
@@ -162,6 +166,11 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
 
   const { addHardwareDetails, updateHardwareDetails } = useAppContext();
 
+  const refreshPageWithDelay = () => {
+    setTimeout(() => {
+      router.reload();
+    }, 2000); // 2 seconds delay
+  };
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
@@ -353,19 +362,18 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
     try {
       let isSuccess = false;
       if (initialValues?._id) {
-        console.log(formData);
         isSuccess = await updateHardwareDetails(initialValues._id, formData);
+        if (onClose) {
+          onClose();
+        }
+        refreshPageWithDelay();
       } else {
         isSuccess = await addHardwareDetails(formData);
-        console.log(formData);
       }
 
       if (isSuccess) {
         setValues(initialHardwareDetails);
         setFileUploads({ images: [], invoices: [], manuals: [] });
-      }
-      if (onClose) {
-        onClose();
       }
     } catch (error) {
       console.error("Error during hardware upload:", error);

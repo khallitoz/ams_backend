@@ -46,13 +46,12 @@ const tableDesign = {
 const AssetInfo: React.FC = () => {
   const router = useRouter();
   const { singleStateData } = useAppContext();
-  console.log(singleStateData);
+
   const printRef = useRef<HTMLDivElement>(null);
 
   const [open, setOpen] = useState(false);
   const [editValues, setEditValues] = useState(singleStateData || null);
   const handleOpen = () => {
-    console.log("Edit button clicked!");
     setEditValues(singleStateData);
     setOpen(true);
   };
@@ -169,7 +168,12 @@ const AssetInfo: React.FC = () => {
                   <TableCell>
                     <b>Warranty Date</b>
                   </TableCell>
-                  <TableCell>{singleStateData.warrantyDate || "N/A"}</TableCell>
+
+                  <TableCell>
+                    {new Date(singleStateData.warrantyDate)
+                      .toISOString()
+                      .split("T")[0] || "N/A"}
+                  </TableCell>
                 </TableRow>
                 <TableRow sx={tableDesign.tableRow}>
                   <TableCell>
