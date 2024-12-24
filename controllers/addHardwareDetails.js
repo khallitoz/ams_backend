@@ -11,7 +11,28 @@ import { dirname } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Helper function to parse JSON strings safely
+const parseNestedJSON = (reqBody, keys) => {
+  keys.forEach((key) => {
+    if (reqBody[key] && typeof reqBody[key] === "string") {
+      try {
+        reqBody[key] = JSON.parse(reqBody[key]);
+      } catch (error) {
+        console.warn(`Failed to parse ${key}:`, error.message);
+        reqBody[key] = {}; // Fallback to an empty object if parsing fails
+      }
+    }
+  });
+};
+
 const addHardwareDetails = async (req, res) => {
+  // Parse nested JSON fields
+  parseNestedJSON(req.body, [
+    "computerDetails",
+    "routerDetails",
+    "switchDetails",
+  ]);
+
   try {
     const {
       assetName,
@@ -31,10 +52,15 @@ const addHardwareDetails = async (req, res) => {
       building,
       room,
       department,
-      computerDetails = {},
-      routerDetails = {},
-      switchDetails = {},
+      computerDetails,
+      routerDetails,
+      switchDetails,
     } = req.body;
+
+    // Extract uploaded file names
+    const images = req.files?.images?.map((file) => file.filename) || [];
+    const invoices = req.files?.invoices?.map((file) => file.filename) || [];
+    const manuals = req.files?.manuals?.map((file) => file.filename) || [];
 
     // Ensure the qrcodes folder exists
     const qrCodesDir = path.join(__dirname, "../public/qrcodes");
@@ -61,12 +87,15 @@ const addHardwareDetails = async (req, res) => {
       building,
       room,
       department,
+      images, // Save file names for images
+      invoices, // Save file names for invoices
+      manuals, // Save file names for manuals
       computerDetails,
       routerDetails,
       switchDetails,
     });
 
-    await hardwareDetails.save();
+    const updatedHardware = await hardwareDetails.save();
 
     // Step 3: Generate QR Code with nanoid
     const qrCodeId = nanoid(10); // Generate unique ID

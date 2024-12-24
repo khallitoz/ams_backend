@@ -22,7 +22,10 @@ const requestAllAssets = async (req, res) => {
       : {}; // No filter if searchQuery is empty
 
     // Apply filtering and pagination
-    const assets = await Hardware.find(searchFilter).skip(skip).limit(limit);
+    const assets = await Hardware.find(searchFilter)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
     const totalAssets = await Hardware.countDocuments(searchFilter); // Total matching asset count
 
     res.status(StatusCodes.OK).json({
