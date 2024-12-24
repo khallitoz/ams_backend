@@ -10,9 +10,8 @@ import { useRouter } from "next/router";
 import axios from "axios";
 import { AppReducer } from "./AppReducer"; // Make sure this is typed if necessary
 import { UPDATE_SINGLE_DETAILS_STATE } from "./actions";
-import CircularProgress from "@mui/material/CircularProgress";
+
 import { toast } from "react-toastify";
-import { msalInstance } from "../utils/msalconfig";
 import SingleAssetDetails from "@/pages/user/singleassetdetails/[assetId]";
 
 // Define the initial state type
@@ -44,6 +43,7 @@ interface AppContextType extends StateType {
   handleGoogleLogin: (googleData: any) => Promise<void>;
   logUserOff: () => Promise<void>;
   addHardwareDetails: (formData: FormData) => Promise<boolean>;
+  updateHardwareDetails: (id: string, formData: FormData) => Promise<boolean>;
   getAllAssetDetails: (
     page: number,
     limit: number,
@@ -132,7 +132,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   const addHardwareDetails = async (formData: FormData): Promise<boolean> => {
     const token = localStorage.getItem("token");
-
+    console.log("FormData being sent:", formData);
     try {
       const response = await axios.post(
         "http://localhost:5000/api/v1/amsservices/addhardware",
@@ -156,6 +156,63 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         });
         return true;
       }
+      return false;
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        const errorMessages: string[] = error.response.data.errors || [];
+        errorMessages.forEach((err) =>
+          toast.error(err, {
+            position: "top-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          })
+        );
+      } else {
+        toast.error(error.message, {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+      return false;
+    }
+  };
+  const updateHardwareDetails = async (
+    id: string,
+    formData: FormData
+  ): Promise<any> => {
+    console.log("FormData being sent:", formData);
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/api/v1/amsservices/updatehardware/${id}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("Updated Successfully !", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        return true;
+      }
+
       return false;
     } catch (error: any) {
       if (error.response && error.response.data) {
@@ -217,36 +274,48 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
-  const getSingleAssetDetail = async (assetId: string): Promise<any> => {
+  const getSingleAssetDetail = async (
+    assetId: string
+  ): Promise<{ success: boolean; data?: any; error?: string }> => {
     const token = localStorage.getItem("token");
+
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     };
 
+    if (!assetId || typeof assetId !== "string" || !assetId.trim()) {
+      return { success: false, error: "Invalid asset ID provided." };
+    }
+
     try {
-      const allSingleAssetDetails = await axios.get(
+      const response = await axios.get(
         `http://localhost:5000/api/v1/amsservices/requestsingleasset?assetId=${assetId}`,
         config
       );
 
-      const details = allSingleAssetDetails.data.data;
+      const details = response.data?.data;
+
+      if (!details) {
+        return {
+          success: false,
+          error: "No data found for the given asset ID.",
+        };
+      }
+
       dispatch({
         type: UPDATE_SINGLE_DETAILS_STATE,
-        payload: {
-          details: details,
-        },
+        payload: { details },
       });
+
+      return { success: true, data: details };
     } catch (error: any) {
-      toast.error(error.message, {
-        position: "top-center",
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      console.error("Error in getSingleAssetDetail:", error.message);
+      return {
+        success: false,
+        error: "Failed to fetch asset details invalid Id.",
+      };
     }
   };
 
@@ -378,6 +447,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         searchAsset,
         submitAssignedAsset,
         fetchAssignedDetails,
+        updateHardwareDetails,
       }}
     >
       {children}

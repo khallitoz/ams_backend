@@ -196,7 +196,7 @@ const Status: React.FC = () => {
               : checkInDesign
           }
         >
-          {assignedDetails?.[0]?.action || "N/A"}
+          {assignedDetails?.[0]?.action || "Check Out"}
         </Typography>
       </Box>
 

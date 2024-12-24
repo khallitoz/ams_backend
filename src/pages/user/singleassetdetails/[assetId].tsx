@@ -9,6 +9,7 @@ import {
   Divider,
 } from "@mui/material";
 import { useAppContext } from "../../../context/AppContext";
+import { toast } from "react-toastify";
 import Sidebar from "@/components/Sidebar";
 import AssetTabBar from "@/components/AssetTabBar";
 import HomeIcon from "@mui/icons-material/Home";
@@ -76,12 +77,47 @@ const SingleAssetDetails: React.FC = () => {
 
   // Fetch single asset data
   const getSingleAssetData = async (id: string | string[] | undefined) => {
-    if (!id || Array.isArray(id)) return;
+    if (!id || Array.isArray(id) || typeof id !== "string" || !id.trim()) {
+      toast.error("Invalid asset ID in the URL.", {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      router.replace("/user/allassets"); // Redirect to All Assets
+      return;
+    }
+
     try {
       setLoading(true);
-      const data = await getSingleAssetDetail(id);
+
+      const result = await getSingleAssetDetail(id);
+
+      if (!result.success || !result.data) {
+        toast.error(result.error || "Failed to fetch asset details.", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        router.replace("/user/allassets"); // Redirect on invalid or not-found ID
+        return;
+      }
     } catch (error) {
-      console.error("Error fetching single asset data:", error);
+      console.error("Unexpected error in fetching asset data:", error);
+      toast.error("An unexpected error occurred. Redirecting...", {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      router.replace("/user/allassets"); // Redirect to All Assets
     } finally {
       setLoading(false);
     }
@@ -129,7 +165,7 @@ const SingleAssetDetails: React.FC = () => {
               ...breadcrumbStyles.activeItem,
             }}
           >
-            Asset Number {singleStateData.uniqueId}
+            Asset Number {singleStateData?.uniqueId || "N/A"}
           </Typography>
         </Breadcrumbs>
 

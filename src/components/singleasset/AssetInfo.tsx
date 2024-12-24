@@ -9,10 +9,17 @@ import {
   TableCell,
   Paper,
   Button,
+  Modal,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import { useAppContext } from "../../context/AppContext";
 import EditIcon from "@mui/icons-material/Edit";
 import PrintIcon from "@mui/icons-material/Print";
+import HardwareForm from "../forms/HardwareForm";
 
 const tableDesign = {
   tableContainer: {
@@ -20,7 +27,6 @@ const tableDesign = {
     width: "100%", // Ensure full width
     maxHeight: "600px", // Set a fixed height for the scrollable area
     overflowY: "auto", // Enable scrolling
-
   },
   assetInfoRow: {
     backgroundColor: "#483D8B",
@@ -40,60 +46,17 @@ const tableDesign = {
 const AssetInfo: React.FC = () => {
   const router = useRouter();
   const { singleStateData } = useAppContext();
+  console.log(singleStateData);
   const printRef = useRef<HTMLDivElement>(null);
 
-  //   const handlePrint = () => {
-  //     if (printRef.current) {
-  //       const printContent = printRef.current.innerHTML;
-  //       const printWindow = window.open("", "_blank");
-  //       printWindow?.document.write(`
-  //         <html>
-  //           <head>
-  //             <title>Print Table</title>
-  //             <style>
-  //               body {
-  //                 font-family: Arial, sans-serif;
-  //                 margin: 20px;
-  //               }
-  //               table {
-  //                 width: 100%;
-  //                 border-collapse: collapse;
-  //               }
-  //               td, th {
-  //                 border: 1px solid #ddd;
-  //                 padding: 8px;
-  //                 text-align: left;
-  //               }
-  //               tr:nth-child(even) {
-  //                 background-color: #f2f2f2;
-  //               }
-  //               tr:hover {
-  //                 background-color: #ddd;
-  //               }
-  //               .asset-info-header {
-  //                 background-color: #483D8B;
-  //                 color: white;
-  //                 font-size: 20px;
-  //                 font-weight: bold;
-  //                 text-align: left;
-  //               }
-  //               img {
-  //                 width: 100px;
-  //                 height: 100px;
-  //               }
-  //             </style>
-  //           </head>
-  //           <body>
-  //             ${printContent}
-  //           </body>
-  //         </html>
-  //       `);
-  //       printWindow?.document.close();
-  //       printWindow?.print();
-  //       printWindow?.close();
-  //     }
-  //   };
-
+  const [open, setOpen] = useState(false);
+  const [editValues, setEditValues] = useState(singleStateData || null);
+  const handleOpen = () => {
+    console.log("Edit button clicked!");
+    setEditValues(singleStateData);
+    setOpen(true);
+  };
+  const handleClose = () => setOpen(false);
   return (
     <Box sx={tableDesign.tableContainer}>
       <Box
@@ -124,6 +87,7 @@ const AssetInfo: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<EditIcon />}
+          onClick={handleOpen}
           sx={{
             color: "white",
             borderColor: "green",
@@ -268,6 +232,31 @@ const AssetInfo: React.FC = () => {
       ) : (
         <Typography>No asset details available</Typography>
       )}
+
+      <Modal open={open} onClose={handleClose}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "80%",
+            maxWidth: "1000px", // Prevent modal from being too wide
+            maxHeight: "90vh", // Prevent modal from exceeding viewport height
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: "8px",
+            overflowY: "auto", // Enable scrolling inside the modal
+          }}
+        >
+          <Typography variant="h6" sx={{ marginBottom: "20px" }}>
+            Edit Asset {singleStateData?.uniqueId} Record
+          </Typography>
+          {/* Pass existing data as initial state */}
+          <HardwareForm initialValues={editValues} onClose={handleClose} />
+        </Box>
+      </Modal>
     </Box>
   );
 };

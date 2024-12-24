@@ -128,9 +128,31 @@ const initialHardwareDetails: HardwareDetails = {
     ipAddress: "",
   },
 };
+interface HardwareFormProps {
+  initialValues?: HardwareDetails; // Optional for new or edit mode
+  onClose?: () => void; // To close the modal after submission
+}
 
-const HardwareForm: React.FC = () => {
-  const [values, setValues] = useState<HardwareDetails>(initialHardwareDetails);
+const HardwareForm: React.FC<HardwareFormProps> = ({
+  initialValues = initialHardwareDetails,
+  onClose,
+}) => {
+  const [values, setValues] = useState<HardwareDetails>({
+    ...initialHardwareDetails,
+    ...initialValues,
+    computerDetails: {
+      ...initialHardwareDetails.computerDetails,
+      ...(initialValues?.computerDetails || {}),
+    },
+    routerDetails: {
+      ...initialHardwareDetails.routerDetails,
+      ...(initialValues?.routerDetails || {}),
+    },
+    switchDetails: {
+      ...initialHardwareDetails.switchDetails,
+      ...(initialValues?.switchDetails || {}),
+    },
+  });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [fileUploads, setFileUploads] = useState<FileUploads>({
     images: [],
@@ -138,7 +160,7 @@ const HardwareForm: React.FC = () => {
     manuals: [],
   });
 
-  const { addHardwareDetails } = useAppContext();
+  const { addHardwareDetails, updateHardwareDetails } = useAppContext();
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -237,19 +259,40 @@ const HardwareForm: React.FC = () => {
     }));
   };
 
+  const resetNestedValues = () => ({
+    computerDetails: {
+      os: "",
+      specificType: "",
+      processor: "",
+      memory: "",
+      ipAddress: "",
+    },
+    routerDetails: {
+      os: "",
+      osVersion: "",
+      ipAddress: "",
+    },
+    switchDetails: {
+      os: "",
+      osVersion: "",
+      ipAddress: "",
+    },
+  });
+
   const handleChange = (
     e:
       | React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
       | SelectChangeEvent<string>
   ) => {
     const { name, value } = e.target;
+
+    // Handle nested fields with dot notation
     const keys = name.split(".");
     if (keys.length > 1) {
       setValues((prev) => {
         const firstKey = keys[0] as keyof HardwareDetails;
         const nestedObject = prev[firstKey];
 
-        // Ensure that `nestedObject` is an object before spreading
         if (typeof nestedObject === "object" && nestedObject !== null) {
           return {
             ...prev,
@@ -259,10 +302,22 @@ const HardwareForm: React.FC = () => {
             },
           };
         }
-        return prev; // Return the previous state if `nestedObject` isn't an object
+        return prev;
       });
     } else {
-      setValues((prev) => ({ ...prev, [name]: value }));
+      // Handle flat fields
+      setValues((prev) => {
+        let updatedValues = { ...prev, [name]: value };
+
+        if (name === "assetType") {
+          updatedValues = {
+            ...updatedValues,
+            ...resetNestedValues(),
+          };
+        }
+
+        return updatedValues;
+      });
     }
   };
 
@@ -273,35 +328,52 @@ const HardwareForm: React.FC = () => {
 
     const formData = new FormData();
 
+    // Append all primitive fields directly
     for (const key in values) {
       const value = values[key as keyof HardwareDetails];
-      if (typeof value === "object" && !Array.isArray(value)) {
-        for (const subKey in value) {
-          formData.append(
-            `${key}.${subKey}`,
-            String(value[subKey as keyof typeof value])
-          );
-        }
+      if (
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        value !== null
+      ) {
+        // Serialize nested objects as JSON
+        formData.append(key, JSON.stringify(value));
       } else {
         formData.append(key, String(value));
       }
     }
 
+    // Append files
     for (const type in fileUploads) {
       fileUploads[type as keyof FileUploads].forEach((file) => {
         formData.append(type, file);
       });
     }
 
-    const isSuccess = await addHardwareDetails(formData);
-    if (isSuccess) {
-      setValues(initialHardwareDetails);
-      setFileUploads({ images: [], invoices: [], manuals: [] });
+    try {
+      let isSuccess = false;
+      if (initialValues?._id) {
+        console.log(formData);
+        isSuccess = await updateHardwareDetails(initialValues._id, formData);
+      } else {
+        isSuccess = await addHardwareDetails(formData);
+        console.log(formData);
+      }
+
+      if (isSuccess) {
+        setValues(initialHardwareDetails);
+        setFileUploads({ images: [], invoices: [], manuals: [] });
+      }
+      if (onClose) {
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error during hardware upload:", error);
     }
   };
 
   return (
-    <Box sx={{ width: "82%" }}>
+    <Box sx={{ width: "100%" }}>
       <form>
         <Box
           sx={{
@@ -322,7 +394,7 @@ const HardwareForm: React.FC = () => {
             onClick={uploadRequest}
             sx={{ backgroundColor: "#483D8B", width: "200px" }}
           >
-            SUBMIT
+            {initialValues?._id ? "Update" : "Submit"}
           </Button>
         </Box>
 
@@ -337,7 +409,6 @@ const HardwareForm: React.FC = () => {
             {/* Asset Name */}
             <StyledTextField
               label="Asset Name"
-              fullWidth
               sx={textFieldStyling}
               name="assetName"
               value={values.assetName}
@@ -462,7 +533,6 @@ const HardwareForm: React.FC = () => {
             <StyledTextField
               label="Warranty Type"
               name="warrantyType"
-              fullWidth
               sx={textFieldStyling}
               value={values.warrantyType}
               onChange={handleChange}
@@ -471,7 +541,6 @@ const HardwareForm: React.FC = () => {
             <StyledTextField
               label="Category"
               name="category"
-              fullWidth
               sx={textFieldStyling}
               value={values.category}
               onChange={handleChange}
@@ -480,7 +549,6 @@ const HardwareForm: React.FC = () => {
             <StyledTextField
               label="Vendor"
               name="vendor"
-              fullWidth
               sx={textFieldStyling}
               value={values.vendor}
               onChange={handleChange}
@@ -489,7 +557,6 @@ const HardwareForm: React.FC = () => {
             <StyledTextField
               label="Status"
               name="status"
-              fullWidth
               sx={textFieldStyling}
               value={values.status}
               onChange={handleChange}
@@ -498,7 +565,6 @@ const HardwareForm: React.FC = () => {
             <StyledTextField
               label="Model Number"
               name="modelNo"
-              fullWidth
               sx={textFieldStyling}
               value={values.modelNo}
               onChange={handleChange}
@@ -507,7 +573,6 @@ const HardwareForm: React.FC = () => {
             <StyledTextField
               label="Model"
               name="model"
-              fullWidth
               sx={textFieldStyling}
               value={values.model}
               onChange={handleChange}
@@ -516,7 +581,6 @@ const HardwareForm: React.FC = () => {
             <StyledTextField
               label="Description"
               name="description"
-              fullWidth
               sx={textFieldStyling}
               value={values.description}
               onChange={handleChange}
@@ -530,6 +594,7 @@ const HardwareForm: React.FC = () => {
                 onChange={(e) => handleImageChange(e, "images")}
               />
             </Box>
+
             <Box sx={textFieldStyling}>
               <Typography>Invoice</Typography>
               <input
@@ -538,6 +603,7 @@ const HardwareForm: React.FC = () => {
                 onChange={(e) => handleImageChange(e, "invoices")}
               />
             </Box>
+
             <Box sx={textFieldStyling}>
               <Typography>User Manual</Typography>
               <input

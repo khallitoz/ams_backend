@@ -162,6 +162,7 @@ const AllAssets: React.FC = () => {
                 <TextField
                   placeholder="Search by Asset Name"
                   variant="outlined"
+                  autoFocus
                   onChange={handleSearch}
                   value={searchQuery}
                   onKeyDown={handleKeyDown}
