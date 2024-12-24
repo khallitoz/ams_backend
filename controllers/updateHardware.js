@@ -26,7 +26,9 @@ const parseNestedJSON = (reqBody, keys) => {
 };
 
 const updateHardware = async (req, res) => {
-  const { id } = req.params; // Get hardware ID from route params
+  const { id } = req.params;
+
+  // Get hardware ID from route params
 
   // Parse nested JSON fields
   parseNestedJSON(req.body, [
@@ -75,8 +77,6 @@ const updateHardware = async (req, res) => {
       routerDetails,
       switchDetails,
     } = req.body;
-
-    return console.log(req.body);
 
     // Handle file uploads
     const images = req.files?.images?.map((file) => file.filename) || [];

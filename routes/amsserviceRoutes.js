@@ -14,6 +14,6 @@ router.get("/requestallassets", requestAllAssets);
 router.get("/requestsingleasset", requestAllSingleAssets);
 router.post("/assignasset", assignAsset);
 router.get("/fetchassignasset", fetchAssignAsset);
-router.put("/updatehardware/:id", updateHardware);
+router.put("/updatehardware/:id", uploadFiles, updateHardware);
 
 export default router;
