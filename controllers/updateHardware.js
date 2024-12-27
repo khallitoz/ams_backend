@@ -28,8 +28,6 @@ const parseNestedJSON = (reqBody, keys) => {
 const updateHardware = async (req, res) => {
   const { id } = req.params;
 
-  // Get hardware ID from route params
-
   // Parse nested JSON fields
   parseNestedJSON(req.body, [
     "computerDetails",
@@ -107,12 +105,17 @@ const updateHardware = async (req, res) => {
       switchDetails: switchDetails || existingHardware.switchDetails,
     };
 
-    // Update file paths if new files are uploaded
-    if (images.length > 0) updatedFields.images = images;
-    if (invoices.length > 0) updatedFields.invoices = invoices;
-    if (manuals.length > 0) updatedFields.manuals = manuals;
+    // Update Images Array Properly
+    existingHardware.images = [
+      ...(Array.isArray(existingHardware.images)
+        ? existingHardware.images
+        : []),
+      ...(Array.isArray(images) ? images : [images]),
+    ];
 
-    // Check if important fields have changed for QR Code regeneration
+    await existingHardware.save();
+
+    // Check if QR Code should be updated
     const shouldUpdateQRCode =
       assetName || modelNo || location || building || room || assignedTo;
 
@@ -147,7 +150,7 @@ const updateHardware = async (req, res) => {
       updatedFields.qrCode = `/qrcodes/${qrCodeFileName}`;
     }
 
-    // Update hardware details
+    // Update hardware details in MongoDB
     const updatedHardware = await Hardware.findByIdAndUpdate(
       id,
       { $set: updatedFields },

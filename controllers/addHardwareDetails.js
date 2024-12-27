@@ -25,8 +25,89 @@ const parseNestedJSON = (reqBody, keys) => {
   });
 };
 
+// Helper function for validation
+const validateForm = (data) => {
+  const errors = {};
+
+  // Main form validations
+  if (!data.assetName) errors.assetName = "Asset name is required.";
+  if (!data.assetType) errors.assetType = "Asset type is required.";
+  if (!data.condition) errors.condition = "Condition is required.";
+  if (!data.price) {
+    errors.price = "Price is required.";
+  } else if (isNaN(Number(data.price)) || Number(data.price) <= 0) {
+    errors.price = "Price must be a valid positive number.";
+  }
+  if (!data.warrantyDate) errors.warrantyDate = "Warranty date is required.";
+  if (!data.warrantyType) errors.warrantyType = "Warranty type is required.";
+  if (!data.category) errors.category = "Category is required.";
+  if (!data.vendor) errors.vendor = "Vendor is required.";
+  if (!data.status) errors.status = "Status is required.";
+  if (!data.modelNo) errors.modelNo = "Model number is required.";
+  if (!data.model) errors.model = "Model is required.";
+  if (!data.description) errors.description = "Description is required.";
+
+  // Location form validation
+  if (!data.assignedTo) errors.assignedTo = "Assigned To field is required.";
+  if (!data.location) errors.location = "Location is required.";
+  if (!data.building) errors.building = "Building is required.";
+  if (!data.room) errors.room = "Room is required.";
+  if (!data.department) errors.department = "Department is required.";
+
+  // Regular expression for validating an IPv4 address
+  const ipRegex =
+    /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/;
+
+  // Computer details validation
+  if (data.assetType === "Computer") {
+    if (!data.computerDetails?.os)
+      errors["computerDetails.os"] = "Operating System is required.";
+    if (!data.computerDetails?.specificType)
+      errors["computerDetails.specificType"] = "Specific Type is required.";
+    if (!data.computerDetails?.processor)
+      errors["computerDetails.processor"] = "Processor is required.";
+    if (!data.computerDetails?.memory)
+      errors["computerDetails.memory"] = "Memory is required.";
+    if (!data.computerDetails?.ipAddress) {
+      errors["computerDetails.ipAddress"] = "IP Address is required.";
+    } else if (!ipRegex.test(data.computerDetails.ipAddress)) {
+      errors["computerDetails.ipAddress"] =
+        "Invalid IP Address. Example: 192.168.1.1";
+    }
+  }
+
+  // Switch details validation
+  if (data.assetType === "Switch") {
+    if (!data.switchDetails?.os)
+      errors["switchDetails.os"] = "Operating System is required.";
+    if (!data.switchDetails?.osVersion)
+      errors["switchDetails.osVersion"] = "OS Version is required.";
+    if (!data.switchDetails?.ipAddress) {
+      errors["switchDetails.ipAddress"] = "IP Address is required.";
+    } else if (!ipRegex.test(data.switchDetails.ipAddress)) {
+      errors["switchDetails.ipAddress"] =
+        "Invalid IP Address. Example: 192.168.1.1";
+    }
+  }
+
+  // Router details validation
+  if (data.assetType === "Router") {
+    if (!data.routerDetails?.os)
+      errors["routerDetails.os"] = "Operating System is required.";
+    if (!data.routerDetails?.osVersion)
+      errors["routerDetails.osVersion"] = "OS Version is required.";
+    if (!data.routerDetails?.ipAddress) {
+      errors["routerDetails.ipAddress"] = "IP Address is required.";
+    } else if (!ipRegex.test(data.routerDetails.ipAddress)) {
+      errors["routerDetails.ipAddress"] =
+        "Invalid IP Address. Example: 192.168.1.1";
+    }
+  }
+
+  return errors;
+};
+
 const addHardwareDetails = async (req, res) => {
-  // Parse nested JSON fields
   parseNestedJSON(req.body, [
     "computerDetails",
     "routerDetails",
@@ -34,93 +115,41 @@ const addHardwareDetails = async (req, res) => {
   ]);
 
   try {
-    const {
-      assetName,
-      assetType,
-      price,
-      warrantyDate,
-      warrantyType,
-      assignedTo,
-      condition,
-      category,
-      vendor,
-      status,
-      modelNo,
-      model,
-      description,
-      location,
-      building,
-      room,
-      department,
-      computerDetails,
-      routerDetails,
-      switchDetails,
-    } = req.body;
-
-    // Extract uploaded file names
-    const images = req.files?.images?.map((file) => file.filename) || [];
-    const invoices = req.files?.invoices?.map((file) => file.filename) || [];
-    const manuals = req.files?.manuals?.map((file) => file.filename) || [];
-
-    // Ensure the qrcodes folder exists
-    const qrCodesDir = path.join(__dirname, "../public/qrcodes");
-    if (!fs.existsSync(qrCodesDir)) {
-      fs.mkdirSync(qrCodesDir, { recursive: true });
+    const errors = validateForm(req.body);
+    if (Object.keys(errors).length > 0) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Validation failed",
+        errors,
+      });
     }
 
-    // Step 1: Create the hardware record with uniqueId from pre-save middleware
     const hardwareDetails = new Hardware({
-      assetName,
-      assetType,
-      price,
-      warrantyDate,
-      warrantyType,
-      assignedTo,
-      condition,
-      category,
-      vendor,
-      status,
-      modelNo,
-      model,
-      description,
-      location,
-      building,
-      room,
-      department,
-      images, // Save file names for images
-      invoices, // Save file names for invoices
-      manuals, // Save file names for manuals
-      computerDetails,
-      routerDetails,
-      switchDetails,
+      ...req.body,
+      images: req.files?.images?.map((file) => file.filename) || [],
+      invoices: req.files?.invoices?.map((file) => file.filename) || [],
+      manuals: req.files?.manuals?.map((file) => file.filename) || [],
     });
 
     const updatedHardware = await hardwareDetails.save();
 
-    // Step 3: Generate QR Code with nanoid
-    const qrCodeId = nanoid(10); // Generate unique ID
+    const qrCodeId = nanoid(10);
     const qrCodeFileName = `${qrCodeId}.png`;
-    const qrCodePath = path.join(qrCodesDir, qrCodeFileName);
+    const qrCodePath = path.join(
+      __dirname,
+      "../public/qrcodes",
+      qrCodeFileName
+    );
 
     const qrData = JSON.stringify({
-      assetName,
-      assetType,
-      modelNo,
-      location,
-      building,
-      room,
-      assignedTo,
+      assetName: req.body.assetName,
+      assetType: req.body.assetType,
+      modelNo: req.body.modelNo,
       uniqueId: updatedHardware.uniqueId,
     });
 
-    await QRCode.toFile(qrCodePath, qrData, {
-      color: {
-        dark: "#000", // Black dots
-        light: "#FFF", // White background
-      },
-    });
+    await QRCode.toFile(qrCodePath, qrData);
 
-    // Step 4: Save the QR Code Path
     updatedHardware.qrCode = `/qrcodes/${qrCodeFileName}`;
     await updatedHardware.save();
 
@@ -128,13 +157,13 @@ const addHardwareDetails = async (req, res) => {
       success: true,
       message: "Hardware details submitted successfully with QR Code",
       data: updatedHardware,
-      qrCode: updatedHardware.qrCode,
     });
   } catch (error) {
     console.error("Error:", error.message);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: error.message,
+      message: "Server error occurred.",
+      error: error.message,
     });
   }
 };
