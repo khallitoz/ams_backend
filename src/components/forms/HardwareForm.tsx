@@ -22,6 +22,7 @@ import conditions from "@/utils/conditions";
 import LocationForm from "./LocationForm";
 import { useAppContext } from "../../context/AppContext";
 import { useRouter } from "next/router";
+import FileUploadField from "./FileUploadField";
 const textFieldStyling = {
   flex: {
     lg: "1 1 calc(33.33% - 16px)",
@@ -169,7 +170,7 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
   const refreshPageWithDelay = () => {
     setTimeout(() => {
       router.reload();
-    }, 2000); // 2 seconds delay
+    }, 1200); // 2 seconds delay
   };
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -257,7 +258,7 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleImageChange = (
+  const handleFileUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
     type: keyof FileUploads
   ) => {
@@ -363,10 +364,12 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
       let isSuccess = false;
       if (initialValues?._id) {
         isSuccess = await updateHardwareDetails(initialValues._id, formData);
-        if (onClose) {
-          onClose();
+        if (isSuccess) {
+          if (onClose) {
+            onClose();
+            refreshPageWithDelay();
+          }
         }
-        refreshPageWithDelay();
       } else {
         isSuccess = await addHardwareDetails(formData);
       }
@@ -374,6 +377,11 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
       if (isSuccess) {
         setValues(initialHardwareDetails);
         setFileUploads({ images: [], invoices: [], manuals: [] });
+        // Clear file input fields manually
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        fileInputs.forEach((input) => {
+          (input as HTMLInputElement).value = "";
+        });
       }
     } catch (error) {
       console.error("Error during hardware upload:", error);
@@ -395,7 +403,9 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
             variant="h5"
             sx={{ marginBottom: "20px", fontWeight: "bold" }}
           >
-            Add New Hardware Asset
+            {initialValues?._id
+              ? "Update Hardware Asset"
+              : "Add New Hardware Asset"}
           </Typography>
           <Button
             variant="contained"
@@ -425,17 +435,17 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
             />
             <FormControl
               fullWidth
-              error={!!errors.assetType} // Highlights the field in red if there's an error
+              error={!!errors.assetType}
               sx={{
-                flex: "1 1 calc(33.33% - 16px)", // Consistent flexbox rules
+                flex: "1 1 calc(33.33% - 16px)",
                 "& .MuiOutlinedInput-root": {
-                  height: "46px", // Matches StyledTextField height
-                  padding: "0px", // Ensure padding doesn't affect alignment
+                  height: "46px",
+                  padding: "0px",
                 },
                 "& .MuiInputLabel-root": {
-                  backgroundColor: "white", // Prevent overlap with the border
-                  padding: "0 4px", // Add padding to give space around the label
-                  transform: "translate(14px, 14px) scale(1)", // Initial position of label
+                  backgroundColor: "white",
+                  padding: "0 4px",
+                  transform: "translate(14px, 14px) scale(1)",
                   transition: "all 0.2s ease-out", // Smooth transition for label movement
                 },
                 "& .Mui-focused .MuiInputLabel-root, & .MuiInputLabel-shrink": {
@@ -595,29 +605,29 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
               error={errors.description}
             />
             <Box sx={textFieldStyling}>
-              <Typography>Images</Typography>
-              <input
-                type="file"
-                multiple
-                onChange={(e) => handleImageChange(e, "images")}
+              <FileUploadField
+                label="Upload Images"
+                type="images"
+                fileUploads={fileUploads}
+                setFileUploads={setFileUploads}
               />
             </Box>
 
             <Box sx={textFieldStyling}>
-              <Typography>Invoice</Typography>
-              <input
-                type="file"
-                multiple
-                onChange={(e) => handleImageChange(e, "invoices")}
+              <FileUploadField
+                label="Upload pdf"
+                type="invoices"
+                fileUploads={fileUploads}
+                setFileUploads={setFileUploads}
               />
             </Box>
 
             <Box sx={textFieldStyling}>
-              <Typography>User Manual</Typography>
-              <input
-                type="file"
-                multiple
-                onChange={(e) => handleImageChange(e, "manuals")}
+              <FileUploadField
+                label="Upload manuals"
+                type="manuals"
+                fileUploads={fileUploads}
+                setFileUploads={setFileUploads}
               />
             </Box>
           </Box>

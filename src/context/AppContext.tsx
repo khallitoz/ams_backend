@@ -133,6 +133,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const addHardwareDetails = async (formData: FormData): Promise<boolean> => {
     const token = localStorage.getItem("token");
     console.log("FormData being sent:", formData);
+
     try {
       const response = await axios.post(
         "http://localhost:5000/api/v1/amsservices/addhardware",
@@ -156,22 +157,51 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         });
         return true;
       }
+
       return false;
     } catch (error: any) {
-      if (error.response && error.response.data) {
-        const errorMessages: string[] = error.response.data.errors || [];
-        errorMessages.forEach((err) =>
-          toast.error(err, {
+      if (error.response) {
+        // Handle 400 validation errors
+        if (error.response.status === 400 && error.response.data.errors) {
+          const errorMessages: { [key: string]: string } =
+            error.response.data.errors;
+          Object.values(errorMessages).forEach((errMsg) =>
+            toast.error(errMsg, {
+              position: "top-center",
+              autoClose: 2000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            })
+          );
+        }
+        // Handle other known error responses
+        else if (error.response.status === 500) {
+          toast.error(error.response.data.msg, {
             position: "top-center",
             autoClose: 2000,
             hideProgressBar: false,
             closeOnClick: true,
             pauseOnHover: true,
             draggable: true,
-          })
-        );
-      } else {
-        toast.error(error.message, {
+          });
+        }
+        // Fallback for other response errors
+        else {
+          toast.error(error.response.data.message || "An error occurred.", {
+            position: "top-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+      }
+      // Network or other unhandled errors
+      else if (error.request) {
+        toast.error("No response from the server. Please check your network.", {
           position: "top-center",
           autoClose: 2000,
           hideProgressBar: false,
@@ -180,14 +210,26 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           draggable: true,
         });
       }
+      // Other unknown errors
+      else {
+        toast.error(`Error: ${error.message}`, {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+
       return false;
     }
   };
+
   const updateHardwareDetails = async (
     id: string,
     formData: FormData
   ): Promise<any> => {
-    console.log("FormData being sent:", formData);
     const token = localStorage.getItem("token");
     try {
       const response = await axios.put(
@@ -215,6 +257,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       return false;
     } catch (error: any) {
+      console.log(error);
       if (error.response && error.response.data) {
         const errorMessages: string[] = error.response.data.errors || [];
         errorMessages.forEach((err) =>

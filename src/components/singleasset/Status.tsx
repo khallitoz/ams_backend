@@ -175,6 +175,7 @@ const Status: React.FC = () => {
   useEffect(() => {
     fetchassignedlist();
   }, [singleStateData._id]);
+
   if (isLoading) {
     return (
       <Box

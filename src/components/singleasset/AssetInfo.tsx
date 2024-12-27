@@ -254,9 +254,7 @@ const AssetInfo: React.FC = () => {
             overflowY: "auto", // Enable scrolling inside the modal
           }}
         >
-          <Typography variant="h6" sx={{ marginBottom: "20px" }}>
-            Edit Asset {singleStateData?.uniqueId} Record
-          </Typography>
+          <Typography variant="h6" sx={{ marginBottom: "20px" }}></Typography>
           {/* Pass existing data as initial state */}
           <HardwareForm initialValues={editValues} onClose={handleClose} />
         </Box>
