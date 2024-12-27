@@ -28,8 +28,8 @@ const assetSchema = new mongoose.Schema(
     qrCode: { type: String, unique: true }, // Unique QR Code field
     checkoutstatus: {
       type: [String],
-      enum: ["Check Out", "Check In"],
-      default: ["Check Out"],
+      enum: ["Check Out", "Check In", "InActive"],
+      default: ["InActive"],
     },
 
     computerDetails: {

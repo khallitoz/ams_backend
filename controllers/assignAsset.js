@@ -1,10 +1,12 @@
 import AssignedAssetDetail from "../models/AssignedAssetDetail.js";
+import Hardware from "../models/HardwareDetails.js";
 import { StatusCodes } from "http-status-codes";
 
 const assignAsset = async (req, res) => {
   try {
     const { action, assignedTo, date, status, id } = req.body;
 
+    // Validate required fields
     if (!id) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
@@ -23,9 +25,26 @@ const assignAsset = async (req, res) => {
 
     await assignedAsset.save();
 
+    // Update hardware checkoutstatus based on action
+    if (action === "Check In") {
+      await Hardware.findByIdAndUpdate(
+        id,
+        { $set: { checkoutstatus: ["Check In"] } }, // Set to "Check In"
+        { new: true, runValidators: true }
+      );
+    } else if (action === "Check Out") {
+      await Hardware.findByIdAndUpdate(
+        id,
+        { $set: { checkoutstatus: ["Check Out"] } }, // Set to "Check Out"
+        { new: true, runValidators: true }
+      );
+    }
+
+    // Send a response after updates are complete
     res.status(StatusCodes.OK).json({
       success: true,
-      message: "Assigned asset details added successfully.",
+      message:
+        "Assigned asset details added and hardware status updated successfully.",
       data: assignedAsset,
     });
   } catch (error) {

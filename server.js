@@ -1,15 +1,14 @@
 import express from "express";
 import dotenv from "dotenv";
-import { OAuth2Client } from "google-auth-library";
+
 import morgan from "morgan";
 import "express-async-errors";
 import connectDb from "./db/connectDb.js";
-import authRouter from "./routes/authRoutes.js";
-// import adminServicesRoute from "./routes/adminServicesRoute.js";
-// import servicesRouter from "./routes/serviceRoutes.js";
+
 import amsservicesRouter from "./routes/amsserviceRoutes.js";
 import errorHandlerMiddleware from "./middleware/error-handler.js";
-import jwtChecker from "./middleware/jwtChecker.js";
+import { authorizeBackblaze } from "./config/backblaze.js";
+
 import cors from "cors";
 
 dotenv.config();
@@ -39,26 +38,28 @@ if (process.env.NODE_ENV !== "production") {
 app.use(express.static("./public")); // Serve static files
 app.use("/uploads", express.static("uploads"));
 
-// Routes
-// app.use("/api/v1/auth", authRouter);
-// app.use("/api/v1/services", servicesRouter);
+
 app.use("/api/v1/amsservices", amsservicesRouter);
 
-// app.use("/api/v1/admin", adminServicesRoute);
 
-// Error Handler
 app.use(errorHandlerMiddleware);
 
 // Start Server
 const start = async () => {
   try {
     await connectDb(process.env.MONGO_URI);
-    console.log("Connected to MongoDB...");
+    console.log("Connected to MongoDB");
+
+    // Authorize Backblaze B2 on server startup
+    await authorizeBackblaze();
+    console.log(" Backblaze B2 Authorized on Server Startup");
+
     app.listen(PORT, () =>
-      console.log(`Server is running on http://localhost:${PORT}`)
+      console.log(` Server is running on http://localhost:${PORT}`)
     );
   } catch (error) {
-    console.error("Failed to connect to MongoDB:", error.message);
+    console.error(" Failed to start server:", error.message);
+    process.exit(1);
   }
 };
 

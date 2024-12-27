@@ -6,6 +6,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import uploadToBackblaze from "../utils/blazeUploads.js";
 
 // Handle __dirname in ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -108,13 +109,10 @@ const validateForm = (data) => {
 };
 
 const addHardwareDetails = async (req, res) => {
-  parseNestedJSON(req.body, [
-    "computerDetails",
-    "routerDetails",
-    "switchDetails",
-  ]);
+  parseNestedJSON(req.body, ["computerDetails", "routerDetails", "switchDetails"]);
 
   try {
+    // 🔹 Step 1: Validate Form Data
     const errors = validateForm(req.body);
     if (Object.keys(errors).length > 0) {
       return res.status(StatusCodes.BAD_REQUEST).json({
@@ -124,23 +122,28 @@ const addHardwareDetails = async (req, res) => {
       });
     }
 
+    // 🔹 Step 2: Upload Files to Backblaze
+    const images = req.files?.images
+      ? await uploadToBackblaze("images", req.files.images)
+      : [];
+    const invoices = req.files?.invoices
+      ? await uploadToBackblaze("invoices", req.files.invoices)
+      : [];
+    const manuals = req.files?.manuals
+      ? await uploadToBackblaze("manuals", req.files.manuals)
+      : [];
+
+    //  Step 3: Save Hardware Details to MongoDB
     const hardwareDetails = new Hardware({
       ...req.body,
-      images: req.files?.images?.map((file) => file.filename) || [],
-      invoices: req.files?.invoices?.map((file) => file.filename) || [],
-      manuals: req.files?.manuals?.map((file) => file.filename) || [],
+      images,   // Save image URLs
+      invoices, // Save invoice URLs
+      manuals,  // Save manual URLs
     });
 
     const updatedHardware = await hardwareDetails.save();
 
-    const qrCodeId = nanoid(10);
-    const qrCodeFileName = `${qrCodeId}.png`;
-    const qrCodePath = path.join(
-      __dirname,
-      "../public/qrcodes",
-      qrCodeFileName
-    );
-
+    // Step 4: Generate QR Code Buffer
     const qrData = JSON.stringify({
       assetName: req.body.assetName,
       assetType: req.body.assetType,
@@ -148,9 +151,16 @@ const addHardwareDetails = async (req, res) => {
       uniqueId: updatedHardware.uniqueId,
     });
 
-    await QRCode.toFile(qrCodePath, qrData);
+    const qrCodeBuffer = await QRCode.toBuffer(qrData);
+    const qrCodeFileName = `${nanoid()}-qrcode.png`;
 
-    updatedHardware.qrCode = `/qrcodes/${qrCodeFileName}`;
+    // Step 5: Upload QR Code to Backblaze
+    const [qrCodeUrl] = await uploadToBackblaze("qrcodes", [
+      { originalname: qrCodeFileName, buffer: qrCodeBuffer, mimetype: "image/png" },
+    ]);
+
+    //  Step 6: Update Hardware with QR Code URL
+    updatedHardware.qrCode = qrCodeUrl;
     await updatedHardware.save();
 
     res.status(StatusCodes.OK).json({
@@ -159,7 +169,7 @@ const addHardwareDetails = async (req, res) => {
       data: updatedHardware,
     });
   } catch (error) {
-    console.error("Error:", error.message);
+    console.error(" Error in addHardwareDetails:", error.message);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Server error occurred.",
@@ -169,3 +179,4 @@ const addHardwareDetails = async (req, res) => {
 };
 
 export { addHardwareDetails };
+

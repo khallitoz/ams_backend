@@ -2,46 +2,38 @@ import multer from "multer";
 import path from "path";
 import { nanoid } from "nanoid";
 
-// Directory for file uploads
-const uploadDir = "./uploads";
+// Use memory storage for Backblaze upload
+const storage = multer.memoryStorage();
 
-// Multer storage configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `${nanoid()}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  },
-});
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/jpg",
+    "image/gif",
+    "image/webp",
+    "application/pdf",
+    "text/plain",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ];
+
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Invalid file type"));
+  }
+};
 
 // Multer upload configuration
 const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = [
-      "image/jpeg", // JPG images
-      "image/png", // PNG images
-      "image/jpg", // JPG images
-      "image/gif", // GIF images (optional)
-      "image/webp", // WEBP images (optional)
-      "application/pdf", // PDF files
-      "text/plain", // TXT files
-      "application/msword", // DOC files (older Microsoft Word format)
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // DOCX files (modern Microsoft Word format)
-    ];
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error("Invalid file type"));
-    }
-  },
+  fileFilter,
 });
 
 export const uploadFiles = upload.fields([
-  { name: "images", maxCount: 5 }, // Accept multiple images
-  { name: "invoices", maxCount: 5 }, // Accept multiple invoices
-  { name: "manuals", maxCount: 5 }, // Accept multiple manuals
+  { name: "images", maxCount: 5 },
+  { name: "invoices", maxCount: 5 },
+  { name: "manuals", maxCount: 5 },
 ]);
