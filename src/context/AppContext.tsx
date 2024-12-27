@@ -49,10 +49,30 @@ interface AppContextType extends StateType {
     limit: number,
     searchQuery: string
   ) => Promise<any>;
+
+  getInActiveAssets: (
+    page: number,
+    limit: number,
+    searchQuery: string
+  ) => Promise<any>;
+  getAllCheckInAssets: (
+    page: number,
+    limit: number,
+    searchQuery: string
+  ) => Promise<any>;
+
+  getAllCheckOutAssets: (
+    page: number,
+    limit: number,
+    searchQuery: string
+  ) => Promise<any>;
+
   getSingleAssetDetail: (id: string) => Promise<any>;
   searchAsset: (searchQuery: string) => Promise<any>;
   submitAssignedAsset: (submissionData: string[]) => Promise<any>;
   fetchAssignedDetails: (id: string) => Promise<any>;
+
+  getTabBarCounter: () => Promise<any>;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -257,21 +277,48 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       return false;
     } catch (error: any) {
-      console.log(error);
-      if (error.response && error.response.data) {
-        const errorMessages: string[] = error.response.data.errors || [];
-        errorMessages.forEach((err) =>
-          toast.error(err, {
+      if (error.response) {
+        // Handle 400 validation errors
+        if (error.response.status === 400 && error.response.data.errors) {
+          const errorMessages: { [key: string]: string } =
+            error.response.data.errors;
+          Object.values(errorMessages).forEach((errMsg) =>
+            toast.error(errMsg, {
+              position: "top-center",
+              autoClose: 2000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            })
+          );
+        }
+        // Handle other known error responses
+        else if (error.response.status === 500) {
+          toast.error(error.response.data.msg, {
             position: "top-center",
             autoClose: 2000,
             hideProgressBar: false,
             closeOnClick: true,
             pauseOnHover: true,
             draggable: true,
-          })
-        );
-      } else {
-        toast.error(error.message, {
+          });
+        }
+        // Fallback for other response errors
+        else {
+          toast.error(error.response.data.message || "An error occurred.", {
+            position: "top-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+      }
+      // Network or other unhandled errors
+      else if (error.request) {
+        toast.error("No response from the server. Please check your network.", {
           position: "top-center",
           autoClose: 2000,
           hideProgressBar: false,
@@ -280,6 +327,18 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           draggable: true,
         });
       }
+      // Other unknown errors
+      else {
+        toast.error(`Error: ${error.message}`, {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+
       return false;
     }
   };
@@ -316,6 +375,130 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       return { data: [], totalAssets: 0, numberOfPages: 0, currentPage: 1 };
     }
   };
+  const getAllCheckInAssets = async (
+    page = 1,
+    limit = 10,
+    searchQuery = ""
+  ): Promise<any> => {
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/v1/amsservices/requestcheckinassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`,
+        config
+      );
+
+      return response.data;
+    } catch (error: any) {
+      toast.error(error.message, {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      return { data: [], totalAssets: 0, numberOfPages: 0, currentPage: 1 };
+    }
+  };
+
+  const getAllCheckOutAssets = async (
+    page = 1,
+    limit = 10,
+    searchQuery = ""
+  ): Promise<any> => {
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/v1/amsservices/requestcheckoutassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`,
+        config
+      );
+
+      return response.data;
+    } catch (error: any) {
+      toast.error(error.message, {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      return { data: [], totalAssets: 0, numberOfPages: 0, currentPage: 1 };
+    }
+  };
+  const getInActiveAssets = async (
+    page = 1,
+    limit = 10,
+    searchQuery = ""
+  ): Promise<any> => {
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/v1/amsservices/requestinactiveassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`,
+        config
+      );
+
+      return response.data;
+    } catch (error: any) {
+      toast.error(error.message, {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      return { data: [], totalAssets: 0, numberOfPages: 0, currentPage: 1 };
+    }
+  };
+  const getTabBarCounter = async (
+    
+  ): Promise<any> => {
+ 
+   
+
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/v1/amsservices/tabbarcounter`,
+        
+      );
+
+      return response.data;
+    } catch (error: any) {
+      toast.error(error.message, {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      
+    }
+  };
+  getTabBarCounter
 
   const getSingleAssetDetail = async (
     assetId: string
@@ -491,6 +674,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         submitAssignedAsset,
         fetchAssignedDetails,
         updateHardwareDetails,
+        getAllCheckInAssets,
+        getAllCheckOutAssets,
+        getInActiveAssets,
+        getTabBarCounter
       }}
     >
       {children}
