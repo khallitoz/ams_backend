@@ -99,7 +99,7 @@ const Sidebar = () => {
               <ListItemIcon>
                 <WysiwygIcon sx={{ color: "white" }} />
               </ListItemIcon>
-              <ListItemText primary="All Assets" />
+              <ListItemText primary="Hard Assets" />
             </ListItemButton>
           </Link>
 
@@ -114,7 +114,7 @@ const Sidebar = () => {
           </Link>
 
           {/* Software Assets */}
-          <Link href="/user/softwareassets" style={sidebarStyles.link}>
+          <Link href="/user/addsoftwareassets" style={sidebarStyles.link}>
             <ListItemButton sx={sidebarStyles.nested}>
               <ListItemIcon>
                 <WebhookIcon sx={{ color: "white" }} />

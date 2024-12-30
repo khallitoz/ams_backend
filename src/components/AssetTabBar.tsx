@@ -3,6 +3,7 @@ import { Box, Tabs, Tab } from "@mui/material";
 import AssetInfo from "./singleasset/AssetInfo";
 import AssetFiles from "./singleasset/AssetFiles";
 import Status from "./singleasset/Status";
+import AssetSoftware from "./singleasset/AssetSoftware";
 
 export default function AssetTabBar() {
   const [value, setValue] = useState<number>(0);
@@ -34,6 +35,7 @@ export default function AssetTabBar() {
         {value === 0 && <AssetInfo />}
         {value === 1 && <AssetFiles />}
         {value === 3 && <Status />}
+        {value === 4 && <AssetSoftware />}
       </Box>
     </>
   );

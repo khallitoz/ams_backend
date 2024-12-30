@@ -43,6 +43,7 @@ interface AppContextType extends StateType {
   handleGoogleLogin: (googleData: any) => Promise<void>;
   logUserOff: () => Promise<void>;
   addHardwareDetails: (formData: FormData) => Promise<boolean>;
+  addSofwareDetails: (values: {}) => Promise<boolean>;
   updateHardwareDetails: (id: string, formData: FormData) => Promise<boolean>;
   getAllAssetDetails: (
     page: number,
@@ -70,7 +71,11 @@ interface AppContextType extends StateType {
   getSingleAssetDetail: (id: string) => Promise<any>;
   searchAsset: (searchQuery: string) => Promise<any>;
   submitAssignedAsset: (submissionData: string[]) => Promise<any>;
+  submitInstalledSoftware: (submissionData: string[]) => Promise<any>;
   fetchAssignedDetails: (id: string) => Promise<any>;
+  fetchSoftwareInfo: (id: string) => Promise<any>;
+
+  deleteSoftwareInfo: (id: string) => Promise<any>;
 
   getTabBarCounter: () => Promise<any>;
 }
@@ -168,6 +173,99 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       if (response.data.success) {
         toast.success("Hardware details submitted successfully!", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        return true;
+      }
+
+      return false;
+    } catch (error: any) {
+      if (error.response) {
+        // Handle 400 validation errors
+        if (error.response.status === 400 && error.response.data.errors) {
+          const errorMessages: { [key: string]: string } =
+            error.response.data.errors;
+          Object.values(errorMessages).forEach((errMsg) =>
+            toast.error(errMsg, {
+              position: "top-center",
+              autoClose: 2000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            })
+          );
+        }
+        // Handle other known error responses
+        else if (error.response.status === 500) {
+          toast.error(error.response.data.msg, {
+            position: "top-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+        // Fallback for other response errors
+        else {
+          toast.error(error.response.data.message || "An error occurred.", {
+            position: "top-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+      }
+      // Network or other unhandled errors
+      else if (error.request) {
+        toast.error("No response from the server. Please check your network.", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+      // Other unknown errors
+      else {
+        toast.error(`Error: ${error.message}`, {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+
+      return false;
+    }
+  };
+  const addSofwareDetails = async (values: {}): Promise<boolean> => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/v1/amsservices/addsoftware",
+        values,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("Software submitted successfully!", {
           position: "top-center",
           autoClose: 2000,
           hideProgressBar: false,
@@ -472,16 +570,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       return { data: [], totalAssets: 0, numberOfPages: 0, currentPage: 1 };
     }
   };
-  const getTabBarCounter = async (
-    
-  ): Promise<any> => {
- 
-   
-
+  const getTabBarCounter = async (): Promise<any> => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/tabbarcounter`,
-        
+        `http://localhost:5000/api/v1/amsservices/tabbarcounter`
       );
 
       return response.data;
@@ -494,11 +586,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         pauseOnHover: true,
         draggable: true,
       });
-
-      
     }
   };
-  getTabBarCounter
+  getTabBarCounter;
 
   const getSingleAssetDetail = async (
     assetId: string
@@ -574,7 +664,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   const submitAssignedAsset = async (submissionData: any): Promise<any> => {
     const token = localStorage.getItem("token");
-    console.log(submissionData);
 
     try {
       const response = await axios.post(
@@ -626,6 +715,91 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
+  const submitInstalledSoftware = async (submissionData: any): Promise<any> => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/v1/amsservices/submitinstalledsoftware",
+        submissionData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("Software assigned successfully", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        return true;
+      }
+      return false;
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        const errorMessages: string[] = error.response.data.errors || [];
+        errorMessages.forEach((err) =>
+          toast.error(err, {
+            position: "top-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          })
+        );
+      } else {
+        toast.error(error.message, {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+      return false;
+    }
+  };
+
+  const fetchSoftwareInfo = async (id: string): Promise<any> => {
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    try {
+      const fetchedDetail = await axios.get(
+        `http://localhost:5000/api/v1/amsservices/fetchsoftwaredetails?assetId=${id}`,
+        config
+      );
+
+      return fetchedDetail.data.data; // Return fetched details from the response
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Failed to fetch assigned details!",
+        {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
+
+      // Return null or handle the error properly
+      return null;
+    }
+  };
   const fetchAssignedDetails = async (id: string): Promise<any> => {
     const token = localStorage.getItem("token");
     const config = {
@@ -637,6 +811,39 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     try {
       const fetchedDetail = await axios.get(
         `http://localhost:5000/api/v1/amsservices/fetchassignasset?assetId=${id}`,
+        config
+      );
+
+      return fetchedDetail.data.data; // Return fetched details from the response
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Failed to fetch assigned details!",
+        {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
+
+      // Return null or handle the error properly
+      return null;
+    }
+  };
+
+  const deleteSoftwareInfo = async (id: string): Promise<any> => {
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    try {
+      const fetchedDetail = await axios.post(
+        `http://localhost:5000/api/v1/amsservices/deletesoftwareinfo?assetId=${id}`,
         config
       );
 
@@ -677,7 +884,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         getAllCheckInAssets,
         getAllCheckOutAssets,
         getInActiveAssets,
-        getTabBarCounter
+        getTabBarCounter,
+        submitInstalledSoftware,
+        fetchSoftwareInfo,
+        deleteSoftwareInfo,
+        addSofwareDetails,
       }}
     >
       {children}
