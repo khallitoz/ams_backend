@@ -28,7 +28,7 @@ const textFieldStyling = {
 
 // Interface for software details
 export interface SoftwareDetails {
-  software: string;
+  name: string;
   vendor: string;
   price: number | null;
   quantity: number | null;
@@ -38,7 +38,7 @@ export interface SoftwareDetails {
 
 // Initial State
 const initialSoftwareDetails: SoftwareDetails = {
-  software: "",
+  name: "",
   vendor: "",
   quantity: null,
   price: null,
@@ -83,8 +83,7 @@ const SoftwareForm: React.FC<SoftwareFormProps> = ({
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!values.software.trim())
-      newErrors.software = "Software name is required.";
+    if (!values.name.trim()) newErrors.name = "Software name is required.";
     if (!values.vendor.trim()) newErrors.vendor = "Vendor is required.";
 
     if (!values.quantity || values.quantity <= 0) {
@@ -99,7 +98,7 @@ const SoftwareForm: React.FC<SoftwareFormProps> = ({
       newErrors.date = "Date is required.";
     }
     if (!values.licenseType.trim())
-      newErrors.licenseType = "Software name is required.";
+      newErrors.licenseType = "License name is required.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -189,10 +188,10 @@ const SoftwareForm: React.FC<SoftwareFormProps> = ({
             <StyledTextField
               label="Software"
               sx={textFieldStyling}
-              name="software"
-              value={values.software}
+              name="name"
+              value={values.name}
               onChange={handleChange}
-              error={errors.software}
+              error={errors.name}
             />
 
             {/* Vendor */}

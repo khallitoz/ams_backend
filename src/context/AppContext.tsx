@@ -73,11 +73,10 @@ interface AppContextType extends StateType {
   submitAssignedAsset: (submissionData: string[]) => Promise<any>;
   submitInstalledSoftware: (submissionData: string[]) => Promise<any>;
   fetchAssignedDetails: (id: string) => Promise<any>;
-  fetchSoftwareInfo: (id: string) => Promise<any>;
-
+  fetchInstalledSoftwares: (id: string) => Promise<any>;
   deleteSoftwareInfo: (id: string) => Promise<any>;
-
   getTabBarCounter: () => Promise<any>;
+  retrieveSoftwareList: () => Promise<any>;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -743,17 +742,16 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       return false;
     } catch (error: any) {
       if (error.response && error.response.data) {
-        const errorMessages: string[] = error.response.data.errors || [];
-        errorMessages.forEach((err) =>
-          toast.error(err, {
-            position: "top-center",
-            autoClose: 2000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          })
-        );
+        const err = error.response.data.message;
+
+        toast.error(err, {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       } else {
         toast.error(error.message, {
           position: "top-center",
@@ -768,7 +766,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
-  const fetchSoftwareInfo = async (id: string): Promise<any> => {
+  const fetchInstalledSoftwares = async (id: string): Promise<any> => {
     const token = localStorage.getItem("token");
     const config = {
       headers: {
@@ -778,7 +776,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       const fetchedDetail = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/fetchsoftwaredetails?assetId=${id}`,
+        `http://localhost:5000/api/v1/amsservices/fetchinstalledsoftwares?assetId=${id}`,
         config
       );
 
@@ -843,7 +841,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       const fetchedDetail = await axios.post(
-        `http://localhost:5000/api/v1/amsservices/deletesoftwareinfo?assetId=${id}`,
+        `http://localhost:5000/api/v1/amsservices/deletesoftwareinfo?softwareId=${id}`,
         config
       );
 
@@ -863,6 +861,33 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       // Return null or handle the error properly
       return null;
+    }
+  };
+
+  const retrieveSoftwareList = async (): Promise<any> => {
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/v1/amsservices/retrievesoftwarelist`,
+        config
+      );
+
+      return response.data.data;
+    } catch (error: any) {
+      toast.error(error.message, {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
   };
 
@@ -886,9 +911,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         getInActiveAssets,
         getTabBarCounter,
         submitInstalledSoftware,
-        fetchSoftwareInfo,
+        fetchInstalledSoftwares,
         deleteSoftwareInfo,
         addSofwareDetails,
+        retrieveSoftwareList,
       }}
     >
       {children}

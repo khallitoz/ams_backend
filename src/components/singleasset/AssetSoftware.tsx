@@ -13,9 +13,6 @@ import {
   Button,
   Modal,
   TextField,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Stack,
 } from "@mui/material";
 
@@ -78,76 +75,19 @@ const tableDesign = {
   },
 };
 
-// Array for software
-const softwareList = [
-  "Windows 10",
-  "Windows 11",
-  "macOS Ventura",
-  "macOS Monterey",
-  "Ubuntu",
-  "Fedora",
-  "Debian",
-  "CentOS",
-  "Red Hat Enterprise Linux (RHEL)",
-  "Chrome OS",
-  "Microsoft Word",
-  "Google Docs",
-  "LibreOffice Writer",
-  "Microsoft Excel",
-  "Google Sheets",
-  "LibreOffice Calc",
-  "Microsoft PowerPoint",
-  "Google Slides",
-  "Canva",
-  "Microsoft Outlook",
-  "Gmail",
-  "Slack",
-  "Microsoft Teams",
-  "Skype",
-  "Zoom",
-  "Asana",
-  "Trello",
-  "Jira",
-  "ClickUp",
-  "Basecamp",
-  "Notion",
-  "Evernote",
-  "Obsidian",
-  "Dropbox",
-  "OneDrive",
-  "Google Drive",
-  "Salesforce",
-  "HubSpot",
-  "Zoho CRM",
-  "QuickBooks",
-  "Xero",
-  "FreshBooks",
-  "ServiceNow",
-  "SAP ERP",
-  "Oracle NetSuite",
-  "Monday.com",
-  "Zendesk",
-  "Freshservice",
-  "SolarWinds",
-  "Tableau",
-  "Power BI",
-  "PagerDuty",
-  "Splunk",
-  "Adobe Acrobat Reader",
-  "Foxit Reader",
-  "Zoho Office Suite",
-  "LibreOffice Suite",
-];
-
 const AssetSoftware: React.FC = () => {
   const {
     singleStateData,
     submitInstalledSoftware,
-    fetchSoftwareInfo,
+    fetchInstalledSoftwares,
     deleteSoftwareInfo,
+    retrieveSoftwareList,
   } = useAppContext();
   const [softwareInfo, setSoftwareInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [availableSoftwares, setAvailableSoftwares] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [softwareToDelete, setSoftwareToDelete] = useState<string | null>(null);
 
   // Modal State
   const [open, setOpen] = useState(false);
@@ -155,10 +95,27 @@ const AssetSoftware: React.FC = () => {
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+  const openDeleteModal = (id: string) => {
+    setSoftwareToDelete(id); // Store the ID of the software to delete
+    setDeleteModalOpen(true); // Open the delete modal
+  };
+
+  const closeDeleteModal = () => {
+    setSoftwareToDelete(null); // Clear the stored software ID
+    setDeleteModalOpen(false); // Close the delete modal
+  };
+
+  const confirmDelete = async () => {
+    if (softwareToDelete) {
+      await deleteSoftwareInfo(softwareToDelete); // Perform the delete action
+      closeDeleteModal(); // Close modal after deletion
+      fetchInstalledSoftwareDetails(); // Refresh the software list
+    }
+  };
+
   const initialState = {
     software: [] as string[],
     date: "",
-    license: "",
     status: "",
   };
 
@@ -170,7 +127,7 @@ const AssetSoftware: React.FC = () => {
     if (!formData.software || formData.software.length === 0)
       newErrors.software = "At least one software must be selected.";
     if (!formData.date) newErrors.date = "Date is required.";
-    if (!formData.license) newErrors.license = "License is required.";
+
     if (!formData.status) newErrors.status = "Status is required.";
 
     setErrors(newErrors);
@@ -188,6 +145,7 @@ const AssetSoftware: React.FC = () => {
       e.target.selectedOptions,
       (option) => option.value
     );
+
     setFormData((prev) => ({
       ...prev,
       software: selectedOptions,
@@ -202,6 +160,8 @@ const AssetSoftware: React.FC = () => {
       console.log("Validation failed. Please fix the errors.");
       return;
     }
+
+    console.log("Form Data Before Submission:", formData);
     const submissionData = {
       ...formData,
       id: singleStateData._id,
@@ -215,15 +175,15 @@ const AssetSoftware: React.FC = () => {
     }
   };
 
-  const fetchSoftwareDetails = async () => {
+  const fetchInstalledSoftwareDetails = async () => {
     if (!singleStateData?._id) {
-      console.warn("No valid asset ID found.");
+      console.warn("No valid software ID found.");
       return;
     }
 
     setIsLoading(true); // Start loader
 
-    const data = await fetchSoftwareInfo(singleStateData._id);
+    const data = await fetchInstalledSoftwares(singleStateData._id);
 
     if (data) {
       setSoftwareInfo(data); // Update state with valid data
@@ -234,14 +194,16 @@ const AssetSoftware: React.FC = () => {
     setIsLoading(false); // Stop loader
   };
 
-  const handleDelete = (id: string) => {
-    deleteSoftwareInfo(id);
+  const fetchAvailableSoftwares = async () => {
+    const data = await retrieveSoftwareList();
+    setAvailableSoftwares(data);
   };
 
-  const handleCircleAction = () => {};
+
 
   useEffect(() => {
-    fetchSoftwareDetails();
+    fetchAvailableSoftwares();
+    fetchInstalledSoftwareDetails();
   }, [singleStateData._id]);
 
   if (isLoading) {
@@ -286,14 +248,14 @@ const AssetSoftware: React.FC = () => {
             <TableBody>
               {/* Map through softwareInfo to render rows */}
               {Array.isArray(softwareInfo) && softwareInfo.length > 0 ? (
-                softwareInfo.map((asset) => (
-                  <TableRow hover key={asset._id}>
+                softwareInfo.map((software) => (
+                  <TableRow hover key={software._id}>
                     {/* Action Buttons */}
                     <TableCell>
                       <Stack direction="row" spacing={1}>
                         {/* Edit Icon */}
                         <Box
-                          onClick={() => handleEdit(asset._id)}
+                          onClick={() => handleEdit(software._id)}
                           sx={{
                             color: "green",
                             cursor: "pointer",
@@ -310,7 +272,7 @@ const AssetSoftware: React.FC = () => {
 
                         {/* Delete Icon */}
                         <Box
-                          onClick={() => handleDelete(asset._id)}
+                          onClick={() => openDeleteModal(software._id)}
                           sx={{
                             color: "red",
                             cursor: "pointer",
@@ -328,44 +290,20 @@ const AssetSoftware: React.FC = () => {
                     </TableCell>
 
                     {/* Software Pills */}
-                    <TableCell>
-                      <Box
-                        sx={{ display: "flex", flexWrap: "wrap", gap: "4px" }}
-                      >
-                        {Array.isArray(asset.software) &&
-                        asset.software.length > 0
-                          ? asset.software
-                              .map((software, index) => (
-                                <Box
-                                  key={index}
-                                  sx={{
-                                    backgroundColor: "#483D8B", // Dark Slate Blue
-                                    color: "white",
-                                    borderRadius: "5px",
-                                    padding: "2px 8px",
-                                    fontSize: "12px",
-                                  }}
-                                >
-                                  {software}
-                                </Box>
-                              ))
-                              .reduce((prev, curr) => [prev, ", ", curr])
-                          : "N/A"}
-                      </Box>
-                    </TableCell>
+                    <TableCell>{software.name}</TableCell>
 
                     {/* Date Installed */}
                     <TableCell>
-                      {asset.date
-                        ? new Date(asset.date).toLocaleDateString()
+                      {software.date
+                        ? new Date(software.date).toLocaleDateString()
                         : "N/A"}
                     </TableCell>
 
                     {/* License */}
-                    <TableCell>{asset.license}</TableCell>
+                    <TableCell>{software.license}</TableCell>
 
                     {/* Status */}
-                    <TableCell>{asset.status}</TableCell>
+                    <TableCell>{software.status}</TableCell>
                   </TableRow>
                 ))
               ) : (
@@ -433,9 +371,9 @@ const AssetSoftware: React.FC = () => {
                     fontSize: "14px",
                   }}
                 >
-                  {softwareList.map((name) => (
-                    <option key={name} value={name}>
-                      {name}
+                  {availableSoftwares?.map((software) => (
+                    <option key={software._id} value={software._id}>
+                      {software.name}
                     </option>
                   ))}
                 </select>
@@ -460,18 +398,6 @@ const AssetSoftware: React.FC = () => {
                 sx={{ marginBottom: "10px" }}
               />
 
-              {/* License Field */}
-              <TextField
-                fullWidth
-                label="License"
-                name="license"
-                error={!!errors.license}
-                helperText={errors.license}
-                value={formData.license}
-                onChange={handleChange}
-                sx={{ marginBottom: "10px" }}
-              />
-
               {/* Status Field */}
               <TextField
                 fullWidth
@@ -493,6 +419,82 @@ const AssetSoftware: React.FC = () => {
                 Submit
               </Button>
             </form>
+          </Box>
+        </Modal>
+
+        <Modal open={deleteModalOpen} onClose={closeDeleteModal}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 400,
+              bgcolor: "background.paper",
+              borderRadius: "8px",
+              boxShadow: 24,
+              textAlign: "center",
+              p: 4,
+            }}
+          >
+            {/* Icon */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "#FDEDED",
+                borderRadius: "50%",
+                width: "80px",
+                height: "80px",
+                margin: "0 auto 16px",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "48px",
+                  color: "#FF4D4F",
+                }}
+              >
+                ✖
+              </Typography>
+            </Box>
+
+            {/* Title */}
+            <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1 }}>
+              Are you sure?
+            </Typography>
+
+            {/* Description */}
+            <Typography sx={{ color: "#6b6b6b", mb: 3 }}>
+              Do you really want remove the installed software
+            </Typography>
+
+            {/* Buttons */}
+            <Stack direction="row" spacing={2} justifyContent="center">
+              <Button
+                variant="outlined"
+                sx={{
+                  borderColor: "#BFBFBF",
+                  color: "#6b6b6b",
+                  "&:hover": { backgroundColor: "#f5f5f5" },
+                }}
+                onClick={closeDeleteModal}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: "#FF4D4F",
+                  color: "white",
+                  "&:hover": { backgroundColor: "#D9363E" },
+                }}
+                onClick={confirmDelete}
+              >
+                Delete
+              </Button>
+            </Stack>
           </Box>
         </Modal>
       </Box>
