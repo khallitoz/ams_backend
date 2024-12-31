@@ -4,8 +4,7 @@ import { StatusCodes } from "http-status-codes";
 const validateForm = (values) => {
   const errors = {};
 
-  if (!values.software.trim())
-    newErrors.software = "Software name is required.";
+  if (!values.name.trim()) newErrors.name = "Software name is required.";
   if (!values.vendor.trim()) newErrors.vendor = "Vendor is required.";
   if (!values.licenseType.trim()) newErrors.vendor = "License is required.";
 
@@ -54,4 +53,23 @@ const addSoftware = async (req, res) => {
   }
 };
 
-export { addSoftware };
+const retrieveSoftwareList = async (req, res) => {
+  try {
+    const retrievedSoftware = await Softwares.find();
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Software retrieved successfully",
+      data: retrievedSoftware,
+    });
+  } catch (error) {
+    console.error(" Error in addSoftwareDetails:", error.message);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Server error occurred.",
+      error: error.message,
+    });
+  }
+};
+
+export { addSoftware, retrieveSoftwareList };

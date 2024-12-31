@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const SoftwareDetailSchema = new mongoose.Schema(
   {
-    software: { type: String, required: true },
+    name: { type: String, required: true },
     vendor: { type: String, required: true },
     date: { type: Date, required: true },
     licenseType: { type: String, required: true },
