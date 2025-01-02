@@ -33,8 +33,14 @@ const addSoftware = async (req, res) => {
         errors,
       });
     }
+    const { price, quantity } = req.body;
+    const totalCost = price * quantity;
+
     const softwaresInstalled = new Softwares({
       ...req.body,
+      totalCost: totalCost,
+      assignedQuantity: 0,
+      spares: quantity,
     });
 
     await softwaresInstalled.save();

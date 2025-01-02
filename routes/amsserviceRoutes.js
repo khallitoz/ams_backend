@@ -7,6 +7,7 @@ import {
   requestCheckInassets,
   requestInActiveassets,
   tabbarCounter,
+  requestSoftwareAssets,
 } from "../controllers/requestAllAssets.js";
 import {
   addSoftware,
@@ -33,7 +34,7 @@ router.get("/requestcheckinassets", requestCheckInassets);
 router.get("/requestcheckoutassets", requestCheckOutassets);
 router.get("/requestinactiveassets", requestInActiveassets);
 router.get("/tabbarcounter", tabbarCounter);
-
+router.get("/requestsoftwareassets", requestSoftwareAssets);
 router.get("/requestsingleasset", requestAllSingleAssets);
 router.post("/assignasset", assignAsset);
 router.post("/submitinstalledsoftware", submitInstalledSoftware);

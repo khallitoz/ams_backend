@@ -67,7 +67,9 @@ const submitInstalledSoftware = async (req, res) => {
       }
 
       // Update software quantity
-      softwareData.quantity -= 1;
+      softwareData.assignedQuantity += 1;
+      softwareData.spares =
+        softwareData.quantity - softwareData.assignedQuantity;
       await softwareData.save();
 
       validSoftwares.push({
@@ -150,7 +152,9 @@ const deleteSoftwareDetails = async (req, res) => {
     // Update software quantity
     const softwareData = await Softwares.findById(installedSoftware.softwareId);
     if (softwareData) {
-      softwareData.quantity += 1; // Increment the quantity
+      softwareData.spares += 1;
+      softwareData.assignedQuantity -= 1;
+      // Increment the quantity
       await softwareData.save();
     }
 
