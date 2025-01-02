@@ -11,10 +11,15 @@ import {
 } from "../controllers/requestAllAssets.js";
 import {
   addSoftware,
+  updateSoftware,
   retrieveSoftwareList,
 } from "../controllers/addSoftware.js";
 
-import { requestAllSingleAssets } from "../controllers/requestAllSingleAssets.js";
+import {
+  requestAllSingleAssets,
+  requestSoftwareAssetDetails,
+  fetchAssociatedHardwares,
+} from "../controllers/requestAllSingleAssets.js";
 import { assignAsset } from "../controllers/assignAsset.js";
 import { fetchAssignAsset } from "../controllers/fetchassignasset.js";
 import { updateHardware } from "../controllers/updateHardware.js";
@@ -36,11 +41,14 @@ router.get("/requestinactiveassets", requestInActiveassets);
 router.get("/tabbarcounter", tabbarCounter);
 router.get("/requestsoftwareassets", requestSoftwareAssets);
 router.get("/requestsingleasset", requestAllSingleAssets);
+router.get("/requestsoftwareassetdetails", requestSoftwareAssetDetails);
 router.post("/assignasset", assignAsset);
 router.post("/submitinstalledsoftware", submitInstalledSoftware);
 router.post("/deletesoftwareinfo", deleteSoftwareDetails);
 router.get("/fetchinstalledsoftwares", fetchInstalledSoftwares);
 router.get("/fetchassignasset", fetchAssignAsset);
 router.put("/updatehardware/:id", uploadFiles, updateHardware);
+router.get("/fetchassociatedhardwares", fetchAssociatedHardwares);
+router.put("/updatesoftware/:id", updateSoftware);
 
 export default router;

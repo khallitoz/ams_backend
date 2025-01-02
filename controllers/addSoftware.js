@@ -4,20 +4,20 @@ import { StatusCodes } from "http-status-codes";
 const validateForm = (values) => {
   const errors = {};
 
-  if (!values.name.trim()) newErrors.name = "Software name is required.";
-  if (!values.vendor.trim()) newErrors.vendor = "Vendor is required.";
-  if (!values.licenseType.trim()) newErrors.vendor = "License is required.";
+  if (!values.name.trim()) errors.name = "Software name is required.";
+  if (!values.vendor.trim()) errors.vendor = "Vendor is required.";
+  if (!values.licenseType.trim()) errors.vendor = "License is required.";
 
   if (!values.quantity || values.quantity <= 0) {
-    newErrors.quantity = "Quantity must be a valid positive number.";
+    errors.quantity = "Quantity must be a valid positive number.";
   }
 
   if (!values.price || values.price <= 0) {
-    newErrors.price = "Price must be a valid positive number.";
+    errors.price = "Price must be a valid positive number.";
   }
 
   if (!values.date.trim()) {
-    newErrors.date = "Date is required.";
+    errors.date = "Date is required.";
   }
 
   return errors;
@@ -78,4 +78,62 @@ const retrieveSoftwareList = async (req, res) => {
   }
 };
 
-export { addSoftware, retrieveSoftwareList };
+const updateSoftware = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const errors = validateForm(req.body);
+    if (Object.keys(errors).length > 0) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Validation failed",
+        errors,
+      });
+    }
+
+    const softwareDetail = await Softwares.findById(id);
+    if (!softwareDetail) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: "Software not found.",
+      });
+    }
+
+    if (quantity < softwareDetail.assignedQuantity) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message:
+          "Please unassign all hardware devices before modifying the quantity",
+      });
+    }
+
+    const { quantity, price } = req.body;
+    const newTotalCost = quantity * price;
+    const spares = quantity - softwareDetail.assignedQuantity;
+
+    const updatedSoftware = await Softwares.findByIdAndUpdate(
+      id,
+      {
+        ...req.body,
+        totalCost: newTotalCost,
+        spares: spares,
+      },
+      { new: true, runValidators: true }
+    );
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Software Updated",
+      data: updatedHardware,
+    });
+  } catch (error) {
+    console.error("Error updating hardware:", error.message);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to update hardware details.",
+      error: error.message,
+    });
+  }
+};
+
+export { addSoftware, retrieveSoftwareList, updateSoftware };

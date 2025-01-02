@@ -48,9 +48,8 @@ const start = async () => {
     await connectDb(process.env.MONGO_URI);
     console.log("Connected to MongoDB");
 
-    // Authorize Backblaze B2 on server startup
-    // await authorizeBackblaze();
-    // console.log(" Backblaze B2 Authorized on Server Startup");
+    await authorizeBackblaze();
+    console.log(" Backblaze B2 Authorized on Server Startup");
 
     app.listen(PORT, () =>
       console.log(` Server is running on http://localhost:${PORT}`)

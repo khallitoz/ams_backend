@@ -6,7 +6,7 @@ const submitInstalledSoftware = async (req, res) => {
   try {
     const { software, date, status, id } = req.body;
 
-    // Validate Required Fields
+    //  Validate Required Fields
     if (!id) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
@@ -28,56 +28,33 @@ const submitInstalledSoftware = async (req, res) => {
       });
     }
 
+    //  Check for Already Installed Software
     const alreadyInstalled = await installedSoftwares
       .find({
         hardwareId: id,
-        softwareId: { $in: software }, // Ensure softwareId exists in the array
+        softwareId: { $in: software },
       })
-      .populate("softwareId", "name"); // Fetch the software name from AllSoftwares
+      .populate("softwareId", "name");
 
     if (alreadyInstalled.length > 0) {
       const alreadyInstalledNames = alreadyInstalled
         .map((s) => s.name)
         .join(", ");
-
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
-        message: `The following software is already installed on this hardware: ${alreadyInstalledNames}`,
+        message: `The following software is already installed: ${alreadyInstalledNames}`,
       });
     }
 
-    // Validate Software Availability and Update Quantity
-    const invalidSoftwares = [];
-    const validSoftwares = [];
-    const softwareAssets = []; // To store each installed software record
+    //  Validate Software IDs in Bulk
+    const validSoftwareData = await Softwares.find({ _id: { $in: software } });
 
-    for (const softwareId of software) {
-      const softwareData = await Softwares.findById(softwareId);
+    const validSoftwareIds = validSoftwareData.map((s) => s._id.toString());
 
-      if (!softwareData) {
-        invalidSoftwares.push(softwareId);
-        continue;
-      }
-
-      if (softwareData.quantity <= 0) {
-        return res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          message: `Software ${softwareData.name} is out of stock. Contact your administrator.`,
-        });
-      }
-
-      // Update software quantity
-      softwareData.assignedQuantity += 1;
-      softwareData.spares =
-        softwareData.quantity - softwareData.assignedQuantity;
-      await softwareData.save();
-
-      validSoftwares.push({
-        id: softwareData._id, // Add the softwareId for reference
-        name: softwareData.name,
-        license: softwareData.licenseType || "N/A",
-      });
-    }
+    // Identify Invalid Software IDs
+    const invalidSoftwares = software.filter(
+      (id) => !validSoftwareIds.includes(id)
+    );
 
     if (invalidSoftwares.length > 0) {
       return res.status(StatusCodes.BAD_REQUEST).json({
@@ -87,30 +64,69 @@ const submitInstalledSoftware = async (req, res) => {
       });
     }
 
-    //Save Installed Software Records
-    for (const { id: softwareId, name, license } of validSoftwares) {
-      const softwareAsset = new installedSoftwares({
+    //  Validate Stock Availability & Prepare Updates
+    const validSoftwares = [];
+
+    const bulkUpdateOperations = [];
+
+    for (const softwareData of validSoftwareData) {
+      if (softwareData.quantity === softwareData.assignedQuantity) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          message: `Software ${softwareData.name} is out of stock. Contact your administrator.`,
+        });
+      }
+
+      // Update software quantity (in-memory updates, bulk saved later)
+      softwareData.assignedQuantity += 1;
+      softwareData.spares =
+        softwareData.quantity - softwareData.assignedQuantity;
+
+      bulkUpdateOperations.push({
+        updateOne: {
+          filter: { _id: softwareData._id },
+          update: {
+            assignedQuantity: softwareData.assignedQuantity,
+            spares: softwareData.spares,
+          },
+        },
+      });
+
+      validSoftwares.push({
+        id: softwareData._id,
+        name: softwareData.name,
+        license: softwareData.licenseType || "N/A",
+      });
+    }
+
+    //  Bulk Save Software Quantity Updates
+    await Softwares.bulkWrite(bulkUpdateOperations);
+
+    //  Bulk Save Installed Software Records
+    const installedRecords = validSoftwares.map(
+      ({ id: softwareId, name, license }) => ({
         hardwareId: id,
-        softwareId, // Reference to the software table
-        name: name,
+        softwareId,
+        name,
         license,
         date,
         status,
-      });
-      await softwareAsset.save();
-      softwareAssets.push(softwareAsset);
-    }
+      })
+    );
+
+    await installedSoftwares.insertMany(installedRecords);
 
     res.status(StatusCodes.OK).json({
       success: true,
       message: "Software installed successfully on hardware.",
-      data: softwareAssets,
+      data: installedRecords,
     });
   } catch (error) {
     console.error("Error:", error.message);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: error.message,
+      message: "Internal server error.",
+      error: error.message,
     });
   }
 };
