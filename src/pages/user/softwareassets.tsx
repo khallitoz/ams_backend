@@ -187,7 +187,7 @@ const AllAssets: React.FC = () => {
                 <TableBody>
                   {assetData.map((asset, index) => (
                     <Link
-                      href={`/user/singleassetdetails/${asset._id}`}
+                      href={`/user/softwareassetdetails/${asset._id}`}
                       key={asset._id}
                       passHref
                       legacyBehavior

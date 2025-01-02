@@ -9,10 +9,12 @@ import jwt_decode from "jwt-decode";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { AppReducer } from "./AppReducer"; // Make sure this is typed if necessary
-import { UPDATE_SINGLE_DETAILS_STATE } from "./actions";
+import {
+  UPDATE_SINGLE_DETAILS_STATE,
+  UPDATE_SOFTWARE_DETAILS_STATE,
+} from "./actions";
 
 import { toast } from "react-toastify";
-import SingleAssetDetails from "@/pages/user/singleassetdetails/[assetId]";
 
 // Define the initial state type
 interface StateType {
@@ -20,6 +22,7 @@ interface StateType {
   alertText: string;
   alertType: string;
   singleStateData: any;
+  singleSoftwareData: any;
 }
 
 // Initial state
@@ -28,6 +31,7 @@ const initialState: StateType = {
   alertText: "",
   alertType: "",
   singleStateData: null,
+  singleSoftwareData: null,
 };
 
 // Define context type
@@ -74,11 +78,14 @@ interface AppContextType extends StateType {
   ) => Promise<any>;
 
   getSingleAssetDetail: (id: string) => Promise<any>;
+  getSoftwareAssetDetail: (id: string) => Promise<any>;
   searchAsset: (searchQuery: string) => Promise<any>;
   submitAssignedAsset: (submissionData: string[]) => Promise<any>;
   submitInstalledSoftware: (submissionData: string[]) => Promise<any>;
   fetchAssignedDetails: (id: string) => Promise<any>;
   fetchInstalledSoftwares: (id: string) => Promise<any>;
+  fetchAssociatedHardware: (id: string) => Promise<any>;
+  updateSoftwareDetails: (id: string, values: {}) => Promise<boolean>;
   deleteSoftwareInfo: (id: string) => Promise<any>;
   getTabBarCounter: () => Promise<any>;
   retrieveSoftwareList: () => Promise<any>;
@@ -445,6 +452,102 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
+  const updateSoftwareDetails = async (
+    id: string,
+    values: any
+  ): Promise<any> => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/api/v1/amsservices/updatesoftware/${id}`,
+        values,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("Updated Successfully !", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        return true;
+      }
+
+      return false;
+    } catch (error: any) {
+      if (error.response && error.response.status === 400) {
+        toast.error(error.response.data.message || "Validation failed.", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+
+      if (error.response.status === 400 && error.response.data.errors) {
+        const errorMessages = error.response.data.errors;
+
+        // Loop through each validation error and display it
+        Object.values(errorMessages).forEach((errMsg) => {
+          toast.error(errMsg, {
+            position: "top-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        });
+      }
+      // Handle server errors
+      else if (error.response && error.response.status === 500) {
+        toast.error("Server error occurred. Please try again later.", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+      // Handle network errors
+      else if (error.request) {
+        console.log("Network error:", error.request);
+        toast.error("No response from the server. Please check your network.", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+      // Handle unknown errors
+      else {
+        console.log("Unknown error:", error.message);
+        toast.error(`Error: ${error.message}`, {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+
+      return false;
+    }
+  };
+
   const getAllAssetDetails = async (
     page = 1,
     limit = 10,
@@ -672,6 +775,50 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
+  const getSoftwareAssetDetail = async (
+    assetId: string
+  ): Promise<{ success: boolean; data?: any; error?: string }> => {
+    const token = localStorage.getItem("token");
+
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    if (!assetId || typeof assetId !== "string" || !assetId.trim()) {
+      return { success: false, error: "Invalid asset ID provided." };
+    }
+
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/v1/amsservices/requestsoftwareassetdetails?assetId=${assetId}`,
+        config
+      );
+
+      const details = response.data?.data;
+
+      if (!details) {
+        return {
+          success: false,
+          error: "No data found for the given asset ID.",
+        };
+      }
+
+      dispatch({
+        type: UPDATE_SOFTWARE_DETAILS_STATE,
+        payload: { details },
+      });
+
+      return { success: true, data: details };
+    } catch (error: any) {
+      console.error("Error in getSingleAssetDetail:", error.message);
+      return {
+        success: false,
+        error: "Failed to fetch asset details invalid Id.",
+      };
+    }
+  };
   const searchAsset = async (searchQuery: string): Promise<any> => {
     const token = localStorage.getItem("token");
     const config = {
@@ -836,6 +983,40 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       return null;
     }
   };
+
+  const fetchAssociatedHardware = async (id: string): Promise<any> => {
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    try {
+      const fetchedDetail = await axios.get(
+        `http://localhost:5000/api/v1/amsservices/fetchassociatedhardwares?assetId=${id}`,
+        config
+      );
+
+      return fetchedDetail.data.data; // Return fetched details from the response
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Failed to fetch assigned details!",
+        {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
+
+      // Return null or handle the error properly
+      return null;
+    }
+  };
+
   const fetchAssignedDetails = async (id: string): Promise<any> => {
     const token = localStorage.getItem("token");
     const config = {
@@ -954,6 +1135,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         addSofwareDetails,
         retrieveSoftwareList,
         getAllSoftwareAssetDetails,
+        getSoftwareAssetDetail,
+        fetchAssociatedHardware,
+        updateSoftwareDetails,
       }}
     >
       {children}

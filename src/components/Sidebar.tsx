@@ -15,6 +15,7 @@ import ComputerIcon from "@mui/icons-material/Computer";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import WebhookIcon from "@mui/icons-material/Webhook";
+import AddIcon from "@mui/icons-material/Add";
 
 const sidebarStyles = {
   container: {
@@ -87,7 +88,7 @@ const Sidebar = () => {
       <Box sx={sidebarStyles.sectionHeader}>
         <ListItemButton onClick={handleAssetsClick} sx={sidebarStyles.listItem}>
           <ListItemIcon>
-            <InventoryIcon sx={{ color: "white" }} />
+            <AddIcon sx={{ color: "white" }} />
           </ListItemIcon>
           <ListItemText primary="Add Assets" />
           {openAssets ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -103,7 +104,7 @@ const Sidebar = () => {
               <ListItemIcon>
                 <ComputerIcon sx={{ color: "white" }} />
               </ListItemIcon>
-              <ListItemText primary="Add Hardware Asset" />
+              <ListItemText primary="Add Hardwares" />
             </ListItemButton>
           </Link>
 
@@ -113,7 +114,7 @@ const Sidebar = () => {
               <ListItemIcon>
                 <WebhookIcon sx={{ color: "white" }} />
               </ListItemIcon>
-              <ListItemText primary="Add Software Asset" />
+              <ListItemText primary="Add Softwares " />
             </ListItemButton>
           </Link>
         </List>
@@ -123,7 +124,7 @@ const Sidebar = () => {
       <Box sx={sidebarStyles.sectionHeader}>
         <ListItemButton onClick={handleViewAssets} sx={sidebarStyles.listItem}>
           <ListItemIcon>
-            <InventoryIcon sx={{ color: "white" }} />
+            <WysiwygIcon sx={{ color: "white" }} />
           </ListItemIcon>
           <ListItemText primary="View Assets" />
           {viewAssets ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -137,9 +138,9 @@ const Sidebar = () => {
           <Link href="/user/allassets" style={sidebarStyles.link}>
             <ListItemButton sx={sidebarStyles.nested}>
               <ListItemIcon>
-                <WysiwygIcon sx={{ color: "white" }} />
+                <ComputerIcon sx={{ color: "white" }} />
               </ListItemIcon>
-              <ListItemText primary="View Hardware Assets" />
+              <ListItemText primary="View Hardwares" />
             </ListItemButton>
           </Link>
         </List>
@@ -148,9 +149,9 @@ const Sidebar = () => {
           <Link href="/user/softwareassets" style={sidebarStyles.link}>
             <ListItemButton sx={sidebarStyles.nested}>
               <ListItemIcon>
-                <WysiwygIcon sx={{ color: "white" }} />
+                <WebhookIcon sx={{ color: "white" }} />
               </ListItemIcon>
-              <ListItemText primary="View Software Assets" />
+              <ListItemText primary="View Softwares" />
             </ListItemButton>
           </Link>
         </List>
