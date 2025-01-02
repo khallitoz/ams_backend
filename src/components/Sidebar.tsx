@@ -62,9 +62,13 @@ const sidebarStyles = {
 
 const Sidebar = () => {
   const [openAssets, setOpenAssets] = React.useState(true);
+  const [viewAssets, setViewAssets] = React.useState(true);
 
   const handleAssetsClick = () => {
     setOpenAssets(!openAssets);
+  };
+  const handleViewAssets = () => {
+    setViewAssets(!viewAssets);
   };
 
   return (
@@ -79,13 +83,13 @@ const Sidebar = () => {
         </ListItemButton>
       </Link>
 
-      {/* Assets Section */}
+      {/* Add Assets Section */}
       <Box sx={sidebarStyles.sectionHeader}>
         <ListItemButton onClick={handleAssetsClick} sx={sidebarStyles.listItem}>
           <ListItemIcon>
             <InventoryIcon sx={{ color: "white" }} />
           </ListItemIcon>
-          <ListItemText primary="Assets" />
+          <ListItemText primary="Add Assets" />
           {openAssets ? <ExpandLessIcon /> : <ExpandMoreIcon />}
         </ListItemButton>
       </Box>
@@ -93,23 +97,13 @@ const Sidebar = () => {
       {/* Assets Children */}
       <Collapse in={openAssets} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
-          {/* All Assets */}
-          <Link href="/user/allassets" style={sidebarStyles.link}>
-            <ListItemButton sx={sidebarStyles.nested}>
-              <ListItemIcon>
-                <WysiwygIcon sx={{ color: "white" }} />
-              </ListItemIcon>
-              <ListItemText primary="Hard Assets" />
-            </ListItemButton>
-          </Link>
-
           {/* New Asset */}
           <Link href="/user/addhardwareasset" style={sidebarStyles.link}>
             <ListItemButton sx={sidebarStyles.nested}>
               <ListItemIcon>
                 <ComputerIcon sx={{ color: "white" }} />
               </ListItemIcon>
-              <ListItemText primary="New Hardware" />
+              <ListItemText primary="Add Hardware Asset" />
             </ListItemButton>
           </Link>
 
@@ -119,7 +113,44 @@ const Sidebar = () => {
               <ListItemIcon>
                 <WebhookIcon sx={{ color: "white" }} />
               </ListItemIcon>
-              <ListItemText primary="Add Software" />
+              <ListItemText primary="Add Software Asset" />
+            </ListItemButton>
+          </Link>
+        </List>
+      </Collapse>
+
+      {/* Assets Section */}
+      <Box sx={sidebarStyles.sectionHeader}>
+        <ListItemButton onClick={handleViewAssets} sx={sidebarStyles.listItem}>
+          <ListItemIcon>
+            <InventoryIcon sx={{ color: "white" }} />
+          </ListItemIcon>
+          <ListItemText primary="View Assets" />
+          {viewAssets ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+        </ListItemButton>
+      </Box>
+
+      {/* Add Assets Children */}
+      <Collapse in={viewAssets} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding>
+          {/* All Assets */}
+          <Link href="/user/allassets" style={sidebarStyles.link}>
+            <ListItemButton sx={sidebarStyles.nested}>
+              <ListItemIcon>
+                <WysiwygIcon sx={{ color: "white" }} />
+              </ListItemIcon>
+              <ListItemText primary="View Hardware Assets" />
+            </ListItemButton>
+          </Link>
+        </List>
+        <List component="div" disablePadding>
+          {/* All Assets */}
+          <Link href="/user/softwareassets" style={sidebarStyles.link}>
+            <ListItemButton sx={sidebarStyles.nested}>
+              <ListItemIcon>
+                <WysiwygIcon sx={{ color: "white" }} />
+              </ListItemIcon>
+              <ListItemText primary="View Software Assets" />
             </ListItemButton>
           </Link>
         </List>

@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import {
-  Box,
-  Typography,
-
-} from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 import Sidebar from "@/components/Sidebar";
 import TabBar from "@/components/TabBar";
-
 
 const dashboardStyles = {
   container: {
@@ -70,7 +65,7 @@ const AllAssets: React.FC = () => {
       <Sidebar />
 
       <Box sx={dashboardStyles.content}>
-        <Typography sx={{ fontSize: "25px" }}>All Assets</Typography>
+        <Typography sx={{ fontSize: "25px" }}>All Hardware Assets</Typography>
 
         <Box>
           <TabBar />

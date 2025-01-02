@@ -50,6 +50,11 @@ interface AppContextType extends StateType {
     limit: number,
     searchQuery: string
   ) => Promise<any>;
+  getAllSoftwareAssetDetails: (
+    page: number,
+    limit: number,
+    searchQuery: string
+  ) => Promise<any>;
 
   getInActiveAssets: (
     page: number,
@@ -472,6 +477,39 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       return { data: [], totalAssets: 0, numberOfPages: 0, currentPage: 1 };
     }
   };
+  const getAllSoftwareAssetDetails = async (
+    page = 1,
+    limit = 10,
+    searchQuery = ""
+  ): Promise<any> => {
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/v1/amsservices/requestsoftwareassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`,
+        config
+      );
+
+      return response.data;
+    } catch (error: any) {
+      toast.error(error.message, {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      return { data: [], totalAssets: 0, numberOfPages: 0, currentPage: 1 };
+    }
+  };
+
   const getAllCheckInAssets = async (
     page = 1,
     limit = 10,
@@ -915,6 +953,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         deleteSoftwareInfo,
         addSofwareDetails,
         retrieveSoftwareList,
+        getAllSoftwareAssetDetails,
       }}
     >
       {children}

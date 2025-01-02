@@ -13,12 +13,11 @@ import {
   Paper,
   TextField,
   TablePagination,
-  Button,
 } from "@mui/material";
 import InputAdornment from "@mui/material/InputAdornment";
 import { useAppContext } from "../../context/AppContext";
 import Sidebar from "@/components/Sidebar";
-import TabBar from "@/components/TabBar";
+
 import SearchIcon from "@mui/icons-material/Search";
 import { useDebounce } from "@/utils/useDebounce";
 
@@ -77,7 +76,7 @@ const dashboardStyles = {
 };
 
 const AllAssets: React.FC = () => {
-  const { getAllAssetDetails } = useAppContext();
+  const { getAllSoftwareAssetDetails } = useAppContext();
   const [loading, setLoading] = useState<boolean>(true);
   const [assetData, setAssetData] = useState<any[]>([]);
   const [totalAssets, setTotalAssets] = useState<number>(0);
@@ -112,7 +111,7 @@ const AllAssets: React.FC = () => {
   ) => {
     setLoading(true);
     try {
-      const { data: assets, totalAssets } = await getAllAssetDetails(
+      const { data: assets, totalAssets } = await getAllSoftwareAssetDetails(
         currentPage + 1,
         currentRowsPerPage,
         searchQuery
@@ -132,86 +131,95 @@ const AllAssets: React.FC = () => {
   }, [page, rowsPerPage, debouncedSearchQuery]);
 
   return (
-    <Box>
-      {loading ? (
-        <CircularProgress />
-      ) : (
-        <>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginBottom: "20px",
-            }}
-          >
-            <Typography variant="h4">
-              {totalAssets} Asset{totalAssets !== 1 && "s"} found
-            </Typography>
+    <Box sx={dashboardStyles.container}>
+      <Sidebar />
 
-            <TextField
-              placeholder="Search by Asset Name"
-              variant="outlined"
-              autoFocus
-              onChange={handleSearch}
-              value={searchQuery}
-              onKeyDown={handleKeyDown}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
+      <Box sx={dashboardStyles.content}>
+        <Typography sx={{ fontSize: "25px" }}>All Software Assets</Typography>
+        {loading ? (
+          <CircularProgress />
+        ) : (
+          <>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginBottom: "20px",
               }}
-              sx={dashboardStyles.searchInput}
-            />
-          </Box>
-          <TableContainer component={Paper} sx={dashboardStyles.table}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>#</TableCell>
-                  <TableCell>Asset Name</TableCell>
-                  <TableCell>Asset Number</TableCell>
-                  <TableCell>Asset Type</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Condition</TableCell>
-                  <TableCell>Location</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {assetData.map((asset, index) => (
-                  <Link
-                    href={`/user/singleassetdetails/${asset._id}`}
-                    key={asset._id}
-                    passHref
-                    legacyBehavior
-                  >
-                    <TableRow hover component="a">
-                      <TableCell>{index + 1 + page * rowsPerPage}</TableCell>
-                      <TableCell>{asset.assetName}</TableCell>
-                      <TableCell>{asset.uniqueId}</TableCell>
-                      <TableCell>{asset.assetType}</TableCell>
-                      <TableCell>{asset.category || "N/A"}</TableCell>
-                      <TableCell>{asset.condition}</TableCell>
-                      <TableCell>{asset.location}</TableCell>
-                    </TableRow>
-                  </Link>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </>
-      )}
-      <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
-        component="div"
-        count={totalAssets}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={(_, newPage) => setPage(newPage)}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
+            >
+              <Typography variant="h4">
+                {totalAssets} Asset{totalAssets !== 1 && "s"} found
+              </Typography>
+
+              <TextField
+                placeholder="Search by Asset Name"
+                variant="outlined"
+                autoFocus
+                onChange={handleSearch}
+                value={searchQuery}
+                onKeyDown={handleKeyDown}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={dashboardStyles.searchInput}
+              />
+            </Box>
+            <TableContainer component={Paper} sx={dashboardStyles.table}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>#</TableCell>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Vendor</TableCell>
+                    <TableCell>License</TableCell>
+                    <TableCell>Quantity</TableCell>
+                    <TableCell> Assigned</TableCell>
+                    <TableCell>Spares</TableCell>
+                    <TableCell>Unit Price</TableCell>
+                    <TableCell>Total Cost</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {assetData.map((asset, index) => (
+                    <Link
+                      href={`/user/singleassetdetails/${asset._id}`}
+                      key={asset._id}
+                      passHref
+                      legacyBehavior
+                    >
+                      <TableRow hover component="a">
+                        <TableCell>{index + 1 + page * rowsPerPage}</TableCell>{" "}
+                        <TableCell>{asset.name}</TableCell>
+                        <TableCell>{asset.vendor}</TableCell>
+                        <TableCell>{asset.licenseType || "N/A"}</TableCell>
+                        <TableCell>{asset.quantity}</TableCell>
+                        <TableCell>{asset.assignedQuantity}</TableCell>
+                        <TableCell>{asset.spares}</TableCell>
+                        <TableCell>{asset.price}</TableCell>
+                        <TableCell>{asset.totalCost}</TableCell>
+                      </TableRow>
+                    </Link>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </>
+        )}
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={totalAssets}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(_, newPage) => setPage(newPage)}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      </Box>
     </Box>
   );
 };
