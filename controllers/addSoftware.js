@@ -98,8 +98,9 @@ const updateSoftware = async (req, res) => {
         message: "Software not found.",
       });
     }
-
-    if (quantity < softwareDetail.assignedQuantity) {
+    const { quantity, price } = req.body;
+    const Assigned = softwareDetail.assignedQuantity;
+    if (quantity < Assigned) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
         message:
@@ -107,7 +108,6 @@ const updateSoftware = async (req, res) => {
       });
     }
 
-    const { quantity, price } = req.body;
     const newTotalCost = quantity * price;
     const spares = quantity - softwareDetail.assignedQuantity;
 
@@ -124,13 +124,13 @@ const updateSoftware = async (req, res) => {
     res.status(StatusCodes.OK).json({
       success: true,
       message: "Software Updated",
-      data: updatedHardware,
+      data: updatedSoftware,
     });
   } catch (error) {
     console.error("Error updating hardware:", error.message);
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: "Failed to update hardware details.",
+      message: "Failed to update software details.",
       error: error.message,
     });
   }
