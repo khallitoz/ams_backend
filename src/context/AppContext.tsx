@@ -493,48 +493,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         });
       }
 
-      if (error.response.status === 400 && error.response.data.errors) {
-        const errorMessages = error.response.data.errors;
-
-        // Loop through each validation error and display it
-        Object.values(errorMessages).forEach((errMsg) => {
-          toast.error(errMsg, {
-            position: "top-center",
-            autoClose: 2000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          });
-        });
-      }
       // Handle server errors
       else if (error.response && error.response.status === 500) {
         toast.error("Server error occurred. Please try again later.", {
-          position: "top-center",
-          autoClose: 2000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-      }
-      // Handle network errors
-      else if (error.request) {
-        console.log("Network error:", error.request);
-        toast.error("No response from the server. Please check your network.", {
-          position: "top-center",
-          autoClose: 2000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-      }
-      // Handle unknown errors
-      else {
-        console.log("Unknown error:", error.message);
-        toast.error(`Error: ${error.message}`, {
           position: "top-center",
           autoClose: 2000,
           hideProgressBar: false,
