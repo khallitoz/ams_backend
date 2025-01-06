@@ -199,8 +199,6 @@ const AssetSoftware: React.FC = () => {
     setAvailableSoftwares(data);
   };
 
-
-
   useEffect(() => {
     fetchAvailableSoftwares();
     fetchInstalledSoftwareDetails();
@@ -290,7 +288,7 @@ const AssetSoftware: React.FC = () => {
                     </TableCell>
 
                     {/* Software Pills */}
-                    <TableCell>{software.name}</TableCell>
+                    <TableCell>{software.softwareId.name}</TableCell>
 
                     {/* Date Installed */}
                     <TableCell>
@@ -300,7 +298,7 @@ const AssetSoftware: React.FC = () => {
                     </TableCell>
 
                     {/* License */}
-                    <TableCell>{software.license}</TableCell>
+                    <TableCell>{software.softwareId.licenseType}</TableCell>
 
                     {/* Status */}
                     <TableCell>{software.status}</TableCell>

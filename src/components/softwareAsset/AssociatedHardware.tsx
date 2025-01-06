@@ -205,14 +205,13 @@ const AssociatedHardware: React.FC = () => {
                     <TableCell>{hardware.hardwareId.uniqueId}</TableCell>
                     <TableCell>{hardware.hardwareId.condition}</TableCell>
                     <TableCell>{hardware.softwareId.name}</TableCell>
-                    <TableCell>{hardware.license}</TableCell>
+                    <TableCell>{hardware.softwareId.licenseType}</TableCell>
                     {/* Date Installed */}
                     <TableCell>
                       {hardware.date
                         ? new Date(hardware.date).toLocaleDateString()
                         : "N/A"}
                     </TableCell>
-
                   </TableRow>
                 ))
               ) : (

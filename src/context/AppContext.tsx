@@ -85,10 +85,17 @@ interface AppContextType extends StateType {
   fetchAssignedDetails: (id: string) => Promise<any>;
   fetchInstalledSoftwares: (id: string) => Promise<any>;
   fetchAssociatedHardware: (id: string) => Promise<any>;
+  fetchSoftwareCategoriesData: (category: string) => Promise<any>;
+  fetchSingleSoftwareCategories: (category: string, id: string) => Promise<any>;
+
   updateSoftwareDetails: (id: string, values: {}) => Promise<boolean>;
   deleteSoftwareInfo: (id: string) => Promise<any>;
   getTabBarCounter: () => Promise<any>;
   retrieveSoftwareList: () => Promise<any>;
+  bulkSoftwareWareInstallation: (
+    selectedSoftware: string[],
+    selectedHardware: string[]
+  ) => Promise<any>;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -261,6 +268,108 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       return false;
     }
   };
+
+  const bulkSoftwareWareInstallation = async (
+    selectedSoftwares: string[],
+    selectedHardwares: string[]
+  ): Promise<any> => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/v1/amsservices/installselectedcategories",
+        {
+          softwareIds: selectedSoftwares,
+          hardwareIds: selectedHardwares,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json", // Use JSON for array data
+          },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("Hardware and software details submitted successfully!", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        return true;
+      }
+
+      return false;
+    } catch (error: any) {
+      if (error.response) {
+        // Handle 400 validation errors
+        if (error.response.status === 400 && error.response.data.errors) {
+          const errorMessages: { [key: string]: string } =
+            error.response.data.errors;
+          Object.values(errorMessages).forEach((errMsg) =>
+            toast.error(errMsg, {
+              position: "top-center",
+              autoClose: 2000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            })
+          );
+        }
+        // Handle other known error responses
+        else if (error.response.status === 500) {
+          toast.error(error.response.data.msg, {
+            position: "top-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+        // Fallback for other response errors
+        else {
+          toast.error(error.response.data.message || "An error occurred.", {
+            position: "top-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+      }
+      // Network or other unhandled errors
+      else if (error.request) {
+        toast.error("No response from the server. Please check your network.", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+      // Other unknown errors
+      else {
+        toast.error(`Error: ${error.message}`, {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+
+      return false;
+    }
+  };
+
   const addSofwareDetails = async (values: {}): Promise<boolean> => {
     const token = localStorage.getItem("token");
 
@@ -978,6 +1087,79 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
+  const fetchSoftwareCategoriesData = async (
+    category: string
+  ): Promise<any> => {
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    try {
+      const fetchedDetail = await axios.get(
+        `http://localhost:5000/api/v1/amsservices/fetchSoftwarecategorydata?category=${category}`,
+        config
+      );
+
+      return fetchedDetail.data; // Return fetched details from the response
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Failed to fetch assigned details!",
+        {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
+
+      // Return null or handle the error properly
+      return null;
+    }
+  };
+
+  const fetchSingleSoftwareCategories = async (
+    category: string,
+    id: string
+  ): Promise<any> => {
+    console.log(id);
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    try {
+      const fetchedDetail = await axios.get(
+        `http://localhost:5000/api/v1/amsservices/fetchsingleSoftwarecategorydata?category=${category}&softwareId=${id}
+`,
+        config
+      );
+
+      return fetchedDetail.data; // Return fetched details from the response
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Failed to fetch assigned details!",
+        {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
+
+      // Return null or handle the error properly
+      return null;
+    }
+  };
+
   const fetchAssignedDetails = async (id: string): Promise<any> => {
     const token = localStorage.getItem("token");
     const config = {
@@ -1099,6 +1281,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         getSoftwareAssetDetail,
         fetchAssociatedHardware,
         updateSoftwareDetails,
+        fetchSoftwareCategoriesData,
+        fetchSingleSoftwareCategories,
+        bulkSoftwareWareInstallation,
       }}
     >
       {children}

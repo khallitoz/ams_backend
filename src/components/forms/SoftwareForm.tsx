@@ -15,7 +15,7 @@ import { useAppContext } from "../../context/AppContext";
 import { useRouter } from "next/router";
 
 const licenseOptions = ["Perpetual", "Subscription"];
-
+const categories = ["Computer", "Switch", "Router"];
 // Styling for TextFields
 const textFieldStyling = {
   flex: {
@@ -24,6 +24,13 @@ const textFieldStyling = {
     sm: "1 1 calc(100% - 16px)",
     md: "1 1 calc(50% - 16px)",
   },
+  // height: "58px", // Ensure consistent height across inputs
+  // ".MuiOutlinedInput-root": {
+  //   height: "50px", // Apply height to outlined inputs
+  // },
+  // ".MuiSelect-select": {
+  //   height: "55px",
+  // },
 };
 
 // Interface for software details
@@ -32,8 +39,12 @@ export interface SoftwareDetails {
   vendor: string;
   price: number | null;
   quantity: number | null;
+  category: string;
   date: string;
   licenseType: string;
+  serviceSupportDate?: string; // For Perpetual License
+  installedDate?: string; // For Subscription License
+  expiredDate?: string; // For Subscription License
 }
 
 // Initial State
@@ -43,7 +54,11 @@ const initialSoftwareDetails: SoftwareDetails = {
   quantity: null,
   price: null,
   date: "",
+  category: "",
   licenseType: "",
+  serviceSupportDate: "",
+  installedDate: "",
+  expiredDate: "",
 };
 
 // Props Interface
@@ -97,8 +112,26 @@ const SoftwareForm: React.FC<SoftwareFormProps> = ({
     if (!values.date.trim()) {
       newErrors.date = "Date is required.";
     }
+    if (!values.category.trim()) {
+      newErrors.category = "Category is required.";
+    }
     if (!values.licenseType.trim())
-      newErrors.licenseType = "License name is required.";
+      newErrors.licenseType = "License type is required.";
+
+    // Conditional Validations
+    if (values.licenseType === "Perpetual" && !values.serviceSupportDate) {
+      newErrors.serviceSupportDate = "Service Support Date is required.";
+    }
+
+    if (values.licenseType === "Subscription") {
+      if (!values.installedDate) {
+        newErrors.installedDate = "Installed Date is required.";
+      }
+      if (!values.expiredDate) {
+        newErrors.expiredDate = "Expired Date is required.";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -111,10 +144,20 @@ const SoftwareForm: React.FC<SoftwareFormProps> = ({
   ) => {
     const { name, value } = e.target;
 
-    setValues((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setValues((prev) => {
+      const updatedValues = { ...prev, [name!]: value };
+
+      if (name === "licenseType") {
+        if (value === "Perpetual") {
+          updatedValues.installedDate = "";
+          updatedValues.expiredDate = "";
+        } else if (value === "Subscription") {
+          updatedValues.serviceSupportDate = "";
+        }
+      }
+
+      return updatedValues;
+    });
   };
 
   /**
@@ -193,7 +236,29 @@ const SoftwareForm: React.FC<SoftwareFormProps> = ({
               onChange={handleChange}
               error={errors.name}
             />
-
+            <FormControl variant="outlined" sx={textFieldStyling}>
+              <InputLabel id="license-type-label">Category</InputLabel>
+              <Select
+                labelId="Category"
+                id="category"
+                name="category"
+                value={values.category}
+                onChange={handleChange}
+                label="Category" // This explicitly links to InputLabel
+                displayEmpty
+              >
+                {categories.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.category && (
+                <Typography variant="caption" color="error">
+                  {errors.category}
+                </Typography>
+              )}
+            </FormControl>
             {/* Vendor */}
             <StyledTextField
               label="Vendor"
@@ -221,6 +286,7 @@ const SoftwareForm: React.FC<SoftwareFormProps> = ({
                   </MenuItem>
                 ))}
               </Select>
+
               {errors.licenseType && (
                 <Typography variant="caption" color="error">
                   {errors.licenseType}
@@ -266,6 +332,45 @@ const SoftwareForm: React.FC<SoftwareFormProps> = ({
             />
           </Box>
         </FormSection>
+        {values.licenseType === "Perpetual" && (
+          <FormSection title="Perpetual License Details">
+            <StyledTextField
+              label="Service Support Date"
+              type="date"
+              name="serviceSupportDate"
+              sx={textFieldStyling}
+              value={values.serviceSupportDate}
+              onChange={handleChange}
+              error={errors.serviceSupportDate}
+              InputLabelProps={{ shrink: true }}
+            />
+          </FormSection>
+        )}
+
+        {values.licenseType === "Subscription" && (
+          <FormSection title="Subscription License Details">
+            <StyledTextField
+              label="Installed Date"
+              type="date"
+              name="installedDate"
+              sx={textFieldStyling}
+              value={values.installedDate}
+              onChange={handleChange}
+              error={errors.installedDate}
+              InputLabelProps={{ shrink: true }}
+            />
+            <StyledTextField
+              label="Expired Date"
+              type="date"
+              name="expiredDate"
+              sx={textFieldStyling}
+              value={values.expiredDate}
+              onChange={handleChange}
+              error={errors.expiredDate}
+              InputLabelProps={{ shrink: true }}
+            />
+          </FormSection>
+        )}
       </form>
     </Box>
   );

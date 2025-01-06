@@ -16,6 +16,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import WebhookIcon from "@mui/icons-material/Webhook";
 import AddIcon from "@mui/icons-material/Add";
+import InstallDesktopIcon from "@mui/icons-material/InstallDesktop";
 
 const sidebarStyles = {
   container: {
@@ -104,7 +105,7 @@ const Sidebar = () => {
               <ListItemIcon>
                 <ComputerIcon sx={{ color: "white" }} />
               </ListItemIcon>
-              <ListItemText primary="Add Hardwares" />
+              <ListItemText primary="Hardwares" />
             </ListItemButton>
           </Link>
 
@@ -114,7 +115,16 @@ const Sidebar = () => {
               <ListItemIcon>
                 <WebhookIcon sx={{ color: "white" }} />
               </ListItemIcon>
-              <ListItemText primary="Add Softwares " />
+              <ListItemText primary="Softwares " />
+            </ListItemButton>
+          </Link>
+          {/* Bulk Instalations */}
+          <Link href="/user/bulkinstallations" style={sidebarStyles.link}>
+            <ListItemButton sx={sidebarStyles.nested}>
+              <ListItemIcon>
+                <InstallDesktopIcon sx={{ color: "white" }} />
+              </ListItemIcon>
+              <ListItemText primary="Installations" />
             </ListItemButton>
           </Link>
         </List>
@@ -140,7 +150,7 @@ const Sidebar = () => {
               <ListItemIcon>
                 <ComputerIcon sx={{ color: "white" }} />
               </ListItemIcon>
-              <ListItemText primary="View Hardwares" />
+              <ListItemText primary="Hardwares" />
             </ListItemButton>
           </Link>
         </List>
@@ -151,7 +161,7 @@ const Sidebar = () => {
               <ListItemIcon>
                 <WebhookIcon sx={{ color: "white" }} />
               </ListItemIcon>
-              <ListItemText primary="View Softwares" />
+              <ListItemText primary="Softwares" />
             </ListItemButton>
           </Link>
         </List>
