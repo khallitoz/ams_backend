@@ -34,11 +34,15 @@ const submitInstalledSoftware = async (req, res) => {
         hardwareId: id,
         softwareId: { $in: software },
       })
-      .populate("softwareId", "name");
+      .populate({
+        path: "softwareId",
+        select: "name",
+      });
 
+   
     if (alreadyInstalled.length > 0) {
       const alreadyInstalledNames = alreadyInstalled
-        .map((s) => s.name)
+        .map((s) => s.softwareId.name)
         .join(", ");
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
@@ -107,8 +111,6 @@ const submitInstalledSoftware = async (req, res) => {
       ({ id: softwareId, name, license }) => ({
         hardwareId: id,
         softwareId,
-        name,
-        license,
         date,
         status,
       })
@@ -135,9 +137,18 @@ const fetchInstalledSoftwares = async (req, res) => {
   const { assetId } = req.query;
 
   try {
-    const assets = await installedSoftwares.find({ hardwareId: assetId }).sort({
-      createdAt: -1,
-    });
+    const assets = await installedSoftwares
+      .find({ hardwareId: assetId })
+      .populate({
+        path: "softwareId",
+        select: "name vendor licenseType",
+      })
+      .select("_id  date status")
+      .sort({
+        createdAt: -1,
+      });
+
+    console.log(assets);
 
     res.status(StatusCodes.OK).json({
       success: true,

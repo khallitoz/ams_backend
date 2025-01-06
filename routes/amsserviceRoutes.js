@@ -28,6 +28,11 @@ import {
   fetchInstalledSoftwares,
   deleteSoftwareDetails,
 } from "../controllers/submitInstalledSoftware.js";
+import {
+  fetchSoftwareCategoryData,
+  installSelectedCategories,
+  fetchSingleSoftwareCategoryData
+} from "../controllers/fetchSoftwareCategoryData.js";
 const router = express.Router();
 
 // Upload files and add hardware details
@@ -50,5 +55,9 @@ router.get("/fetchassignasset", fetchAssignAsset);
 router.put("/updatehardware/:id", uploadFiles, updateHardware);
 router.get("/fetchassociatedhardwares", fetchAssociatedHardwares);
 router.put("/updatesoftware/:id", updateSoftware);
+router.get("/fetchSoftwarecategorydata", fetchSoftwareCategoryData);
+router.post("/installselectedcategories", installSelectedCategories);
+router.get("/fetchsingleSoftwarecategorydata", fetchSingleSoftwareCategoryData);
+
 
 export default router;

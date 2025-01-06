@@ -1,4 +1,5 @@
 import Softwares from "../models/Softwares.js";
+import installedSoftwares from "../models/InstallSoftware.js";
 import { StatusCodes } from "http-status-codes";
 
 const validateForm = (values) => {
@@ -18,6 +19,20 @@ const validateForm = (values) => {
 
   if (!values.date.trim()) {
     errors.date = "Date is required.";
+  }
+
+  // Conditional Validations
+  if (values.licenseType === "Perpetual" && !values.serviceSupportDate) {
+    errors.serviceSupportDate = "Service Support Date is required.";
+  }
+
+  if (values.licenseType === "Subscription") {
+    if (!values.installedDate) {
+      errors.installedDate = "Installed Date is required.";
+    }
+    if (!values.expiredDate) {
+      errors.expiredDate = "Expired Date is required.";
+    }
   }
 
   return errors;

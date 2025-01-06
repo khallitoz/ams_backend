@@ -12,14 +12,7 @@ const SoftwareDetailSchema = new mongoose.Schema(
       ref: "AllSoftwares", // Reference to the Softwares collection
       required: true,
     },
-    name: {
-      type: String, // Store the software name for redundancy
-      required: true,
-    },
-    license: {
-      type: String, // Store the software license
-      required: true,
-    },
+
     date: {
       type: Date,
       required: true,
