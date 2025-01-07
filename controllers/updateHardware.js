@@ -2,14 +2,7 @@ import Hardware from "../models/HardwareDetails.js";
 import { StatusCodes } from "http-status-codes";
 import QRCode from "qrcode";
 import { nanoid } from "nanoid";
-import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-
-// Handle __dirname in ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import uploadToBackblaze from "../utils/blazeUploads.js";
 
 // Helper function to parse JSON strings safely
 const parseNestedJSON = (reqBody, keys) => {
@@ -165,10 +158,16 @@ const updateHardware = async (req, res) => {
       switchDetails,
     } = req.body;
 
-    // Handle file uploads
-    const images = req.files?.images?.map((file) => file.filename) || [];
-    const invoices = req.files?.invoices?.map((file) => file.filename) || [];
-    const manuals = req.files?.manuals?.map((file) => file.filename) || [];
+    //  Step 2: Upload Files to Backblaze
+    const images = req.files?.images
+      ? await uploadToBackblaze("images", req.files.images)
+      : [];
+    const invoices = req.files?.invoices
+      ? await uploadToBackblaze("invoices", req.files.invoices)
+      : [];
+    const manuals = req.files?.manuals
+      ? await uploadToBackblaze("manuals", req.files.manuals)
+      : [];
 
     // Prepare updated fields
     const updatedFields = {
@@ -202,42 +201,42 @@ const updateHardware = async (req, res) => {
       ...(Array.isArray(images) ? images : [images]),
     ];
 
+    existingHardware.invoices = [
+      ...(Array.isArray(existingHardware.invoices)
+        ? existingHardware.invoices
+        : []),
+      ...(Array.isArray(invoices) ? invoices : [invoices]),
+    ];
+
+    existingHardware.manuals = [
+      ...(Array.isArray(existingHardware.manuals)
+        ? existingHardware.manuals
+        : []),
+      ...(Array.isArray(manuals) ? manuals : [manuals]),
+    ];
     await existingHardware.save();
 
-    // Check if QR Code should be updated
-    const shouldUpdateQRCode =
-      assetName || modelNo || location || building || room || assignedTo;
+    //  Generate QR Code Buffer
+    const qrData = `
+    ID: ${existingHardware.uniqueId}
+    NAME: ${req.body.assetName}
+    TYPE: ${req.body.assetType}
+    MODEL: ${req.body.modelNo}
+    `;
+    const qrCodeBuffer = await QRCode.toBuffer(qrData);
+    const qrCodeFileName = `${nanoid()}-qrcode.png`;
 
-    if (shouldUpdateQRCode) {
-      const qrCodesDir = path.join(__dirname, "../public/qrcodes");
-      if (!fs.existsSync(qrCodesDir)) {
-        fs.mkdirSync(qrCodesDir, { recursive: true });
-      }
+    // Step 5: Upload QR Code to Backblaze
+    const [qrCodeUrl] = await uploadToBackblaze("qrcodes", [
+      {
+        originalname: qrCodeFileName,
+        buffer: qrCodeBuffer,
+        mimetype: "image/png",
+      },
+    ]);
 
-      const qrCodeId = nanoid(10); // Generate unique ID
-      const qrCodeFileName = `${qrCodeId}.png`;
-      const qrCodePath = path.join(qrCodesDir, qrCodeFileName);
-
-      const qrData = JSON.stringify({
-        assetName: updatedFields.assetName,
-        assetType: updatedFields.assetType,
-        modelNo: updatedFields.modelNo,
-        location: updatedFields.location,
-        building: updatedFields.building,
-        room: updatedFields.room,
-        assignedTo: updatedFields.assignedTo,
-        uniqueId: existingHardware.uniqueId,
-      });
-
-      await QRCode.toFile(qrCodePath, qrData, {
-        color: {
-          dark: "#000",
-          light: "#FFF",
-        },
-      });
-
-      updatedFields.qrCode = `/qrcodes/${qrCodeFileName}`;
-    }
+    //  Step 6: Update Hardware with QR Code URL
+    existingHardware.qrCode = qrCodeUrl;
 
     // Update hardware details in MongoDB
     const updatedHardware = await Hardware.findByIdAndUpdate(

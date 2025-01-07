@@ -14,7 +14,7 @@ import {
   updateSoftware,
   retrieveSoftwareList,
 } from "../controllers/addSoftware.js";
-
+import { fetchAssetInfo } from "../controllers/fetchAssetInfo.js";
 import {
   requestAllSingleAssets,
   requestSoftwareAssetDetails,
@@ -31,7 +31,7 @@ import {
 import {
   fetchSoftwareCategoryData,
   installSelectedCategories,
-  fetchSingleSoftwareCategoryData
+  fetchSingleSoftwareCategoryData,
 } from "../controllers/fetchSoftwareCategoryData.js";
 const router = express.Router();
 
@@ -58,6 +58,6 @@ router.put("/updatesoftware/:id", updateSoftware);
 router.get("/fetchSoftwarecategorydata", fetchSoftwareCategoryData);
 router.post("/installselectedcategories", installSelectedCategories);
 router.get("/fetchsingleSoftwarecategorydata", fetchSingleSoftwareCategoryData);
-
+router.get("/fetchassetinfo", fetchAssetInfo);
 
 export default router;

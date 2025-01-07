@@ -27,7 +27,7 @@ const uploadToBackblaze = async (field, files) => {
           mime: file.mimetype,
         });
 
-        const fileUrl = `https://f000.backblazeb2.com/file/${process.env.B2_BUCKET_NAME}/${uploadResponse.data.fileName}`;
+        const fileUrl = `https://f003.backblazeb2.com/file/${process.env.B2_BUCKET_NAME}/${uploadResponse.data.fileName}`;
         console.log(` File uploaded successfully: ${fileUrl}`);
 
         uploadedFiles.push(fileUrl);
