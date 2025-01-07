@@ -2,7 +2,11 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ["lh3.googleusercontent.com", "developers.google.com"], // Include both domains in the array
+    domains: [
+      "lh3.googleusercontent.com",
+      "developers.google.com",
+      "f003.backblazeb2.com",
+    ], // Include both domains in the array
   },
 };
 

@@ -92,6 +92,8 @@ interface AppContextType extends StateType {
   deleteSoftwareInfo: (id: string) => Promise<any>;
   getTabBarCounter: () => Promise<any>;
   retrieveSoftwareList: () => Promise<any>;
+  fetchAssetInfo: (assetType: string) => Promise<any>;
+  fetchSoftwareTickets: (category: string, id: string) => Promise<any>;
   bulkSoftwareWareInstallation: (
     selectedSoftware: string[],
     selectedHardware: string[]
@@ -1054,6 +1056,39 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
+  const fetchAssetInfo = async (assetType: string): Promise<any> => {
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    try {
+      const fetchedDetail = await axios.get(
+        `http://localhost:5000/api/v1/amsservices/fetchassetinfo?assetType=${assetType}`,
+        config
+      );
+
+      return fetchedDetail.data.data; // Return fetched details from the response
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Failed to fetch assigned details!",
+        {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
+
+      // Return null or handle the error properly
+      return null;
+    }
+  };
+
   const fetchAssociatedHardware = async (id: string): Promise<any> => {
     const token = localStorage.getItem("token");
     const config = {
@@ -1253,6 +1288,42 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
+  const fetchSoftwareTickets = async (
+    category: string,
+    id: string
+  ): Promise<any> => {
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    try {
+      const fetchedDetail = await axios.get(
+        `http://10.0.6.56:5000/api/tickets/fetchdetails?category=${category}&softwareId=${id}
+`,
+        config
+      );
+
+      return fetchedDetail.data.data; // Return fetched details from the response
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Failed to fetch assigned details!",
+        {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
+
+      // Return null or handle the error properly
+      return null;
+    }
+  };
   return (
     <AppContext.Provider
       value={{
@@ -1284,6 +1355,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         fetchSoftwareCategoriesData,
         fetchSingleSoftwareCategories,
         bulkSoftwareWareInstallation,
+        fetchAssetInfo,
+        fetchSoftwareTickets,
       }}
     >
       {children}

@@ -113,10 +113,17 @@ const AssetInfo: React.FC = () => {
                   </TableCell>
                   <TableCell sx={tableDesign.assetInfoRow}>
                     <img
-                      src={`http://localhost:5000//${singleStateData.qrCode}`}
+                      src={singleStateData.qrCode}
                       alt=""
                       style={{ width: "100px", height: "100px " }}
                     />
+                    {/* <Image
+                      src={singleStateData.qrCode}
+                      width={100}
+                      height={100}
+                      alt="Qr Code"
+                    
+                    /> */}
                   </TableCell>
                 </TableRow>
                 {/* Asset Details */}
