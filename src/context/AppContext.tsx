@@ -59,7 +59,12 @@ interface AppContextType extends StateType {
     limit: number,
     searchQuery: string
   ) => Promise<any>;
-
+  fetchSoftwareTickets: (
+    page: number,
+    limit: number,
+    searchQuery: string,
+    id: string
+  ) => Promise<any>;
   getInActiveAssets: (
     page: number,
     limit: number,
@@ -93,7 +98,7 @@ interface AppContextType extends StateType {
   getTabBarCounter: () => Promise<any>;
   retrieveSoftwareList: () => Promise<any>;
   fetchAssetInfo: (assetType: string) => Promise<any>;
-  fetchSoftwareTickets: (category: string, id: string) => Promise<any>;
+
   bulkSoftwareWareInstallation: (
     selectedSoftware: string[],
     selectedHardware: string[]
@@ -1289,7 +1294,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const fetchSoftwareTickets = async (
-    category: string,
+    page = 1,
+    limit = 10,
+    searchQuery = "",
     id: string
   ): Promise<any> => {
     const token = localStorage.getItem("token");
@@ -1298,15 +1305,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         Authorization: `Bearer ${token}`,
       },
     };
-
     try {
       const fetchedDetail = await axios.get(
-        `http://10.0.6.56:5000/api/tickets/fetchdetails?category=${category}&softwareId=${id}
+        `http://10.0.6.56:5000/api/tickets/fetchdetails?page=${page}&limit=${limit}&searchQuery=${searchQuery}&softwareId=${id}
 `,
         config
       );
 
-      return fetchedDetail.data.data; // Return fetched details from the response
+      return fetchedDetail.data; // Return fetched details from the response
     } catch (error: any) {
       toast.error(
         error.response?.data?.message || "Failed to fetch assigned details!",

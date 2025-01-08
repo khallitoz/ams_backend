@@ -13,35 +13,35 @@ interface ConditionalFormProps {
   errors: { [key: string]: string };
 }
 
-export const SwitchForm: React.FC<ConditionalFormProps> = ({
+export const NetworkForm: React.FC<ConditionalFormProps> = ({
   values,
   handleChange,
   errors,
 }) => (
-  <FormSection title="Switch Details">
+  <FormSection title="Network Device Details">
     <StyledTextField
       label="Operating System"
-      name="switchDetails.os"
-      value={values?.switchDetails?.os || ""}
+      name="networkDevice.os"
+      value={values?.networkDevice?.os || ""}
       onChange={handleChange}
-      error={errors["switchDetails.os"]}
-      helperText={errors["switchDetails.os"]}
+      error={errors["networkDevice.os"]}
+      helperText={errors["networkDevice.os"]}
     />
     <StyledTextField
       label="OS Version"
-      name="switchDetails.osVersion"
-      value={values?.switchDetails?.osVersion || ""}
+      name="networkDevice.osVersion"
+      value={values?.networkDevice?.osVersion || ""}
       onChange={handleChange}
-      error={errors["switchDetails.osVersion"]}
-      helperText={errors["switchDetails.osVersion"]}
+      error={errors["networkDevice.osVersion"]}
+      helperText={errors["networkDevice.osVersion"]}
     />
     <StyledTextField
       label="IP Address"
-      name="switchDetails.ipAddress"
-      value={values?.switchDetails?.ipAddress || ""}
+      name="networkDevice.ipAddress"
+      value={values?.networkDevice?.ipAddress || ""}
       onChange={handleChange}
-      error={errors["switchDetails.ipAddress"]}
-      helperText={errors["switchDetails.ipAddress"]}
+      error={errors["networkDevice.ipAddress"]}
+      helperText={errors["networkDevice.ipAddress"]}
     />
   </FormSection>
 );

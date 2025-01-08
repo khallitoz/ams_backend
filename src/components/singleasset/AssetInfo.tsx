@@ -196,9 +196,9 @@ const AssetInfo: React.FC = () => {
                 </TableRow>
                 <TableRow sx={tableDesign.tableRow}>
                   <TableCell>
-                    <b>Status</b>
+                    <b>Serial No</b>
                   </TableCell>
-                  <TableCell>{singleStateData.status || "N/A"}</TableCell>
+                  <TableCell>{singleStateData.serialNo || "N/A"}</TableCell>
                 </TableRow>
                 <TableRow sx={tableDesign.tableRow}>
                   <TableCell>

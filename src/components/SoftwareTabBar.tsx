@@ -27,7 +27,7 @@ export default function SoftwareTabBar() {
             <Tab label="Software Info" />
             <Tab label="Associated Hardware Devices" />
             <Tab label="Bulk Installation" />
-            <Tab label="Software Tickets" />
+            <Tab label="Related Tickets" />
           </Tabs>
         </Box>
         {value === 0 && <SoftwareAssetInfo />}

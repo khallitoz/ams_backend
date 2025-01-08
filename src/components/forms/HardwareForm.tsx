@@ -12,9 +12,8 @@ import {
 } from "@mui/material";
 import StyledTextField from "@/components/StyledTextField";
 import {
-  SwitchForm,
   ComputerDetailsForm,
-  RouterDetailsForm,
+  NetworkForm,
 } from "@/components/forms/ConditionalForms";
 import FormSection from "./FormSection";
 import assetTypes from "@/utils/assetTypes";
@@ -23,6 +22,8 @@ import LocationForm from "./LocationForm";
 import { useAppContext } from "../../context/AppContext";
 import { useRouter } from "next/router";
 import FileUploadField from "./FileUploadField";
+import assetTypeCategories from "@/utils/assetTypeCategories";
+import { validateHardwareForm } from "../validations/hardwareFormValidation";
 const textFieldStyling = {
   flex: {
     lg: "1 1 calc(33.33% - 16px)",
@@ -34,12 +35,25 @@ const textFieldStyling = {
 };
 
 const dropDownStyling = {
-  flex: {
-    lg: "1 1 calc(33.33% - 16px)",
-
-    xs: "1 1 calc(100% - 16px)",
-    sm: "1 1 calc(100% - 16px)",
-    md: "1 1 calc(50% - 16px)",
+  flex: "1 1 calc(33.33% - 16px)",
+  "& .MuiOutlinedInput-root": {
+    height: "46px",
+    padding: "0px",
+  },
+  "& .MuiInputLabel-root": {
+    backgroundColor: "white",
+    padding: "0 4px",
+    transform: "translate(14px, 14px) scale(1)",
+    transition: "all 0.2s ease-out", // Smooth transition for label movement
+  },
+  "& .Mui-focused .MuiInputLabel-root, & .MuiInputLabel-shrink": {
+    transform: "translate(14px, -6px) scale(0.75)", // Position when focused or populated
+  },
+  "& .MuiOutlinedInput-notchedOutline": {
+    borderColor: "rgba(0, 0, 0, 0.23)", // Default border color
+  },
+  "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
+    borderColor: "#483D8B", // Border color on focus
   },
 };
 // Define interfaces for state and file uploads
@@ -57,7 +71,7 @@ interface RouterDetails {
   ipAddress: string;
 }
 
-interface SwitchDetails {
+interface NetworkInfo {
   os: string;
   osVersion: string;
   ipAddress: string;
@@ -73,7 +87,7 @@ export interface HardwareDetails {
   condition: string;
   category: string;
   vendor: string;
-  status: string;
+  serialNo: string;
   modelNo: string;
   model: string;
   description: string;
@@ -83,7 +97,7 @@ export interface HardwareDetails {
   department: string;
   computerDetails: ComputerDetails;
   routerDetails: RouterDetails;
-  switchDetails: SwitchDetails;
+  networkDevice: NetworkInfo;
 }
 
 interface FileUploads {
@@ -103,7 +117,7 @@ const initialHardwareDetails: HardwareDetails = {
   condition: "",
   category: "",
   vendor: "",
-  status: "",
+  serialNo: "",
   modelNo: "",
   model: "",
   description: "",
@@ -123,7 +137,7 @@ const initialHardwareDetails: HardwareDetails = {
     osVersion: "",
     ipAddress: "",
   },
-  switchDetails: {
+  networkDevice: {
     os: "",
     osVersion: "",
     ipAddress: "",
@@ -152,9 +166,9 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
       ...initialHardwareDetails.routerDetails,
       ...(initialValues?.routerDetails || {}),
     },
-    switchDetails: {
-      ...initialHardwareDetails.switchDetails,
-      ...(initialValues?.switchDetails || {}),
+    networkDevice: {
+      ...initialHardwareDetails.networkDevice,
+      ...(initialValues?.networkDevice || {}),
     },
   });
   const router = useRouter();
@@ -171,91 +185,6 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
     setTimeout(() => {
       router.reload();
     }, 1200); // 2 seconds delay
-  };
-  const validateForm = (): boolean => {
-    const newErrors: { [key: string]: string } = {};
-
-    // Main form validations
-    if (!values.assetName) newErrors.assetName = "Asset name is required.";
-    if (!values.assetType) newErrors.assetType = "Asset type is required.";
-    if (!values.condition) newErrors.condition = "Condition is required.";
-    if (!values.price) {
-      newErrors.price = "Price is required.";
-    } else if (isNaN(Number(values.price)) || Number(values.price) <= 0) {
-      newErrors.price = "Price must be a valid positive number.";
-    }
-    if (!values.warrantyDate)
-      newErrors.warrantyDate = "Warranty date is required.";
-    if (!values.warrantyType)
-      newErrors.warrantyType = "Warranty type is required.";
-    if (!values.category) newErrors.category = "Category is required.";
-    if (!values.vendor) newErrors.vendor = "Vendor is required.";
-    if (!values.status) newErrors.status = "Status is required.";
-    if (!values.modelNo) newErrors.modelNo = "Model number is required.";
-    if (!values.model) newErrors.model = "Model is required.";
-    if (!values.description) newErrors.description = "Description is required.";
-
-    // Location form validation
-    if (!values.assignedTo)
-      newErrors.assignedTo = "Assigned To field is required.";
-    if (!values.location) newErrors.location = "Location is required.";
-    if (!values.building) newErrors.building = "Building is required.";
-    if (!values.room) newErrors.room = "Room is required.";
-    if (!values.department) newErrors.department = "Department is required.";
-
-    // Regular expression for validating an IPv4 address
-    const ipRegex =
-      /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/;
-
-    // Computer details validation
-    if (values.assetType === "Computer") {
-      if (!values.computerDetails.os)
-        newErrors["computerDetails.os"] = "Operating System is required.";
-      if (!values.computerDetails.specificType)
-        newErrors["computerDetails.specificType"] =
-          "Specific Type is required.";
-      if (!values.computerDetails.processor)
-        newErrors["computerDetails.processor"] = "Processor is required.";
-      if (!values.computerDetails.memory)
-        newErrors["computerDetails.memory"] = "Memory is required.";
-      if (!values.computerDetails.ipAddress) {
-        newErrors["computerDetails.ipAddress"] = "IP Address is required.";
-      } else if (!ipRegex.test(values.computerDetails.ipAddress)) {
-        newErrors["computerDetails.ipAddress"] =
-          "Invalid IP Address. Example: 192.168.1.1";
-      }
-    }
-
-    // Switch details validation
-    if (values.assetType === "Switch") {
-      if (!values.switchDetails.os)
-        newErrors["switchDetails.os"] = "Operating System is required.";
-      if (!values.switchDetails.osVersion)
-        newErrors["switchDetails.osVersion"] = "OS Version is required.";
-      if (!values.switchDetails.ipAddress) {
-        newErrors["switchDetails.ipAddress"] = "IP Address is required.";
-      } else if (!ipRegex.test(values.switchDetails.ipAddress)) {
-        newErrors["switchDetails.ipAddress"] =
-          "Invalid IP Address. Example: 192.168.1.1";
-      }
-    }
-
-    // Router details validation
-    if (values.assetType === "Router") {
-      if (!values.routerDetails.os)
-        newErrors["routerDetails.os"] = "Operating System is required.";
-      if (!values.routerDetails.osVersion)
-        newErrors["routerDetails.osVersion"] = "OS Version is required.";
-      if (!values.routerDetails.ipAddress) {
-        newErrors["routerDetails.ipAddress"] = "IP Address is required.";
-      } else if (!ipRegex.test(values.routerDetails.ipAddress)) {
-        newErrors["routerDetails.ipAddress"] =
-          "Invalid IP Address. Example: 192.168.1.1";
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const handleFileUpload = (
@@ -282,7 +211,7 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
       osVersion: "",
       ipAddress: "",
     },
-    switchDetails: {
+    networkDevice: {
       os: "",
       osVersion: "",
       ipAddress: "",
@@ -322,6 +251,7 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
         if (name === "assetType") {
           updatedValues = {
             ...updatedValues,
+            category: "",
             ...resetNestedValues(),
           };
         }
@@ -334,7 +264,11 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
   const uploadRequest = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    const validationErrors = validateHardwareForm(values);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors); // Use React state to store errors
+      return;
+    }
 
     const formData = new FormData();
 
@@ -376,8 +310,9 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
 
       if (isSuccess) {
         setValues(initialHardwareDetails);
+
         setFileUploads({ images: [], invoices: [], manuals: [] });
-        // Clear file input fields manually
+        setErrors({});
         const fileInputs = document.querySelectorAll('input[type="file"]');
         fileInputs.forEach((input) => {
           (input as HTMLInputElement).value = "";
@@ -433,31 +368,11 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
               onChange={handleChange}
               error={errors.assetName}
             />
+
             <FormControl
               fullWidth
               error={!!errors.assetType}
-              sx={{
-                flex: "1 1 calc(33.33% - 16px)",
-                "& .MuiOutlinedInput-root": {
-                  height: "46px",
-                  padding: "0px",
-                },
-                "& .MuiInputLabel-root": {
-                  backgroundColor: "white",
-                  padding: "0 4px",
-                  transform: "translate(14px, 14px) scale(1)",
-                  transition: "all 0.2s ease-out", // Smooth transition for label movement
-                },
-                "& .Mui-focused .MuiInputLabel-root, & .MuiInputLabel-shrink": {
-                  transform: "translate(14px, -6px) scale(0.75)", // Position when focused or populated
-                },
-                "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "rgba(0, 0, 0, 0.23)", // Default border color
-                },
-                "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#483D8B", // Border color on focus
-                },
-              }}
+              sx={dropDownStyling}
             >
               <InputLabel>Asset Type</InputLabel>
               <Select
@@ -481,40 +396,56 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
               )}
             </FormControl>
 
+            {/* Category Field */}
+            {values.assetType === "Other" ? (
+              <StyledTextField
+                label="Category"
+                name="category"
+                sx={textFieldStyling}
+                value={values.category}
+                onChange={handleChange}
+                error={errors.category}
+              />
+            ) : (
+              <FormControl
+                fullWidth
+                error={!!errors.category}
+                sx={dropDownStyling}
+                disabled={!values.assetType}
+              >
+                <InputLabel>Category</InputLabel>
+                <Select
+                  name="category"
+                  value={values.category}
+                  onChange={handleChange}
+                  sx={{ "& .MuiSelect-select": { padding: "8px" } }}
+                >
+                  {values.assetType &&
+                    assetTypeCategories[values.assetType]?.map((category) => (
+                      <MenuItem key={category} value={category}>
+                        {category}
+                      </MenuItem>
+                    ))}
+                </Select>
+                {errors.category && (
+                  <FormHelperText>{errors.category}</FormHelperText>
+                )}
+              </FormControl>
+            )}
+
             <FormControl
               fullWidth
-              error={!!errors.condition} // Highlights the field in red if there's an error
-              sx={{
-                flex: "1 1 calc(33.33% - 16px)", // Consistent flexbox rules
-                "& .MuiOutlinedInput-root": {
-                  height: "46px", // Matches StyledTextField height
-                  padding: "0px", // Ensure padding doesn't affect alignment
-                },
-                "& .MuiInputLabel-root": {
-                  backgroundColor: "white", // Prevent overlap with the border
-                  padding: "0 4px", // Add padding to give space around the label
-                  transform: "translate(14px, 14px) scale(1)", // Initial position of label
-                  transition: "all 0.2s ease-out", // Smooth transition for label movement
-                },
-                "& .Mui-focused .MuiInputLabel-root, & .MuiInputLabel-shrink": {
-                  transform: "translate(14px, -6px) scale(0.75)", // Position when focused or populated
-                },
-                "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "rgba(0, 0, 0, 0.23)", // Default border color
-                },
-                "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#483D8B", // Border color on focus
-                },
-              }}
+              error={!!errors.condition}
+              sx={dropDownStyling}
             >
               <InputLabel>Condition</InputLabel>
               <Select
                 name="condition"
-                value={values.condition} // Controlled component
-                onChange={handleChange} // Update state on selection change
+                value={values.condition}
+                onChange={handleChange}
                 sx={{
                   "& .MuiSelect-select": {
-                    padding: "8px", // Consistent padding with StyledTextField
+                    padding: "8px",
                   },
                 }}
               >
@@ -556,14 +487,7 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
               onChange={handleChange}
               error={errors.warrantyType}
             />
-            <StyledTextField
-              label="Category"
-              name="category"
-              sx={textFieldStyling}
-              value={values.category}
-              onChange={handleChange}
-              error={errors.category}
-            />
+
             <StyledTextField
               label="Vendor"
               name="vendor"
@@ -573,12 +497,12 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
               error={errors.vendor}
             />
             <StyledTextField
-              label="Status"
-              name="status"
+              label="Serial Number"
+              name="serialNo"
               sx={textFieldStyling}
-              value={values.status}
+              value={values.serialNo}
               onChange={handleChange}
-              error={errors.status}
+              error={errors.serialNo}
             />
             <StyledTextField
               label="Model Number"
@@ -639,7 +563,7 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
           errors={errors}
         />
 
-        {values.assetType === "Computer" && (
+        {values.assetType === "Computer" && values.category !== "Monitor" && (
           <ComputerDetailsForm
             values={values}
             handleChange={handleChange}
@@ -647,16 +571,8 @@ const HardwareForm: React.FC<HardwareFormProps> = ({
           />
         )}
 
-        {values.assetType === "Switch" && (
-          <SwitchForm
-            values={values}
-            handleChange={handleChange}
-            errors={errors}
-          />
-        )}
-
-        {values.assetType === "Router" && (
-          <RouterDetailsForm
+        {values.assetType === "Network" && (
+          <NetworkForm
             values={values}
             handleChange={handleChange}
             errors={errors}

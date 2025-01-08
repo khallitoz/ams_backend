@@ -75,8 +75,8 @@ const dashboardStyles = {
   },
 };
 
-const SoftwareTickets: React.FC = () => {
-  const { fetchSoftwareTickets, singleSoftwareData } = useAppContext();
+const HardwareTickets: React.FC = () => {
+  const { fetchSoftwareTickets, singleStateData } = useAppContext();
   const [loading, setLoading] = useState<boolean>(true);
   const [assetData, setAssetData] = useState<any[]>([]);
   const [totalAssets, setTotalAssets] = useState<number>(0);
@@ -115,7 +115,7 @@ const SoftwareTickets: React.FC = () => {
         currentPage + 1,
         currentRowsPerPage,
         searchQuery,
-        singleSoftwareData._id
+        singleStateData._id
       );
 
       setAssetData(Array.isArray(assets) ? assets : []);
@@ -221,4 +221,4 @@ const SoftwareTickets: React.FC = () => {
   );
 };
 
-export default SoftwareTickets;
+export default HardwareTickets;
