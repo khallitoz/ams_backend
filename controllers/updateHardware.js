@@ -169,7 +169,7 @@ const updateHardware = async (req, res) => {
       ? await uploadToBackblaze("manuals", req.files.manuals)
       : [];
 
-    // Prepare updated fields
+    // Prepare updated fieldsss
     const updatedFields = {
       assetName: assetName || existingHardware.assetName,
       assetType: assetType || existingHardware.assetType,
