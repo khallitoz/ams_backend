@@ -35,7 +35,7 @@ const validateForm = (data) => {
   if (!data.warrantyType) errors.warrantyType = "Warranty type is required.";
   if (!data.category) errors.category = "Category is required.";
   if (!data.vendor) errors.vendor = "Vendor is required.";
-  if (!data.status) errors.status = "Status is required.";
+  if (!data.serialNo) errors.serialNo = "Status is required.";
   if (!data.modelNo) errors.modelNo = "Model number is required.";
   if (!data.model) errors.model = "Model is required.";
   if (!data.description) errors.description = "Description is required.";
@@ -69,16 +69,16 @@ const validateForm = (data) => {
     }
   }
 
-  // Switch details validation
-  if (data.assetType === "Switch") {
-    if (!data.switchDetails?.os)
-      errors["switchDetails.os"] = "Operating System is required.";
-    if (!data.switchDetails?.osVersion)
-      errors["switchDetails.osVersion"] = "OS Version is required.";
-    if (!data.switchDetails?.ipAddress) {
-      errors["switchDetails.ipAddress"] = "IP Address is required.";
-    } else if (!ipRegex.test(data.switchDetails.ipAddress)) {
-      errors["switchDetails.ipAddress"] =
+  // Network details validation
+  if (data.assetType === "Network") {
+    if (!data.networkDevice?.os)
+      errors["networkDevice.os"] = "Operating System is required.";
+    if (!data.networkDevice?.osVersion)
+      errors["networkDevice.osVersion"] = "OS Version is required.";
+    if (!data.networkDevice?.ipAddress) {
+      errors["networkDevice.ipAddress"] = "IP Address is required.";
+    } else if (!ipRegex.test(data.networkDevice.ipAddress)) {
+      errors["networkDevice.ipAddress"] =
         "Invalid IP Address. Example: 192.168.1.1";
     }
   }
@@ -104,7 +104,7 @@ const addHardwareDetails = async (req, res) => {
   parseNestedJSON(req.body, [
     "computerDetails",
     "routerDetails",
-    "switchDetails",
+    "networkDevice",
   ]);
 
   try {

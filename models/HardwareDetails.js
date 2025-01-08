@@ -13,7 +13,7 @@ const assetSchema = new mongoose.Schema(
     warrantyDate: { type: Date, required: true },
     warrantyType: { type: String, required: true },
     vendor: { type: String, required: false },
-    status: { type: String, required: true },
+    serialNo: { type: String, required: true },
     modelNo: { type: String, required: false },
     model: { type: String, required: false },
     description: { type: String, required: false },
@@ -44,7 +44,7 @@ const assetSchema = new mongoose.Schema(
       osVersion: { type: String },
       ipAddress: { type: String },
     },
-    switchDetails: {
+    networkDevice: {
       os: { type: String },
       osVersion: { type: String },
       ipAddress: { type: String },
