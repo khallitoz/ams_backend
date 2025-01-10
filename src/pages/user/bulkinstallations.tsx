@@ -112,8 +112,8 @@ const BulkInstallation: React.FC = () => {
   const fetchSoftwareCategories = async () => {
     setIsLoading(true);
     const data = await fetchSoftwareCategoriesData(softwareCategories);
-    const softwareInfo = data.software;
-    const hardwareInfo = data.hardware;
+    const softwareInfo = data?.software;
+    const hardwareInfo = data?.hardware;
     setSoftwareData(softwareInfo);
     setHardwareData(hardwareInfo);
     setIsLoading(false);

@@ -92,7 +92,11 @@ interface AppContextType extends StateType {
   fetchAssociatedHardware: (id: string) => Promise<any>;
   fetchSoftwareCategoriesData: (category: string) => Promise<any>;
   fetchSingleSoftwareCategories: (category: string, id: string) => Promise<any>;
-
+  fetchMaintenanceData: (
+    maintenanceType: string,
+    selectedCategory: string,
+    specificCategory: string
+  ) => Promise<any>;
   updateSoftwareDetails: (id: string, values: {}) => Promise<boolean>;
   deleteSoftwareInfo: (id: string) => Promise<any>;
   getTabBarCounter: () => Promise<any>;
@@ -1162,6 +1166,42 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
+  const fetchMaintenanceData = async (
+    maintenanceType: string,
+    selectedCategory: string,
+    specificCategory: string
+  ): Promise<any> => {
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    try {
+      const fetchedDetail = await axios.get(
+        `http://localhost:5000/api/v1/amsservices/fetchmaintenancedata?maintenancetype=${maintenanceType}&selectedCategory=${selectedCategory}&specificCategory=${specificCategory}`,
+        config
+      );
+
+      return fetchedDetail.data; // Return fetched details from the response
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Failed to fetch assigned details!",
+        {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
+
+      // Return null or handle the error properly
+      return null;
+    }
+  };
   const fetchSingleSoftwareCategories = async (
     category: string,
     id: string
@@ -1363,6 +1403,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         bulkSoftwareWareInstallation,
         fetchAssetInfo,
         fetchSoftwareTickets,
+        fetchMaintenanceData,
       }}
     >
       {children}

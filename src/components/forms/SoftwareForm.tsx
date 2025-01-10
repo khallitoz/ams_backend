@@ -13,9 +13,10 @@ import StyledTextField from "@/components/StyledTextField";
 import FormSection from "./FormSection";
 import { useAppContext } from "../../context/AppContext";
 import { useRouter } from "next/router";
+import assetTypes from "../../utils/assetTypes";
 
 const licenseOptions = ["Perpetual", "Subscription"];
-const categories = ["Computer", "Switch", "Router"];
+
 // Styling for TextFields
 const textFieldStyling = {
   flex: {
@@ -247,7 +248,7 @@ const SoftwareForm: React.FC<SoftwareFormProps> = ({
                 label="Category" // This explicitly links to InputLabel
                 displayEmpty
               >
-                {categories.map((option) => (
+                {assetTypes.map((option) => (
                   <MenuItem key={option} value={option}>
                     {option}
                   </MenuItem>

@@ -17,7 +17,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import WebhookIcon from "@mui/icons-material/Webhook";
 import AddIcon from "@mui/icons-material/Add";
 import InstallDesktopIcon from "@mui/icons-material/InstallDesktop";
-
+import BuildIcon from "@mui/icons-material/Build";
 const sidebarStyles = {
   container: {
     width: "18%",
@@ -127,6 +127,16 @@ const Sidebar = () => {
               <ListItemText primary="Installations" />
             </ListItemButton>
           </Link>
+
+          {/* Bulk Maintenance */}
+          <Link href="/user/bulkmaintanance" style={sidebarStyles.link}>
+            <ListItemButton sx={sidebarStyles.nested}>
+              <ListItemIcon>
+                <BuildIcon sx={{ color: "white" }} />
+              </ListItemIcon>
+              <ListItemText primary="Maintenance" />
+            </ListItemButton>
+          </Link>
         </List>
       </Collapse>
 
@@ -141,7 +151,7 @@ const Sidebar = () => {
         </ListItemButton>
       </Box>
 
-      {/* Add Assets Children */}
+      {/* View Assets Children */}
       <Collapse in={viewAssets} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
           {/* All Assets */}
@@ -162,6 +172,14 @@ const Sidebar = () => {
                 <WebhookIcon sx={{ color: "white" }} />
               </ListItemIcon>
               <ListItemText primary="Softwares" />
+            </ListItemButton>
+          </Link>
+          <Link href="/user/viewmaintanance" style={sidebarStyles.link}>
+            <ListItemButton sx={sidebarStyles.nested}>
+              <ListItemIcon>
+                <BuildIcon sx={{ color: "white" }} />
+              </ListItemIcon>
+              <ListItemText primary="Maintenance" />
             </ListItemButton>
           </Link>
         </List>
