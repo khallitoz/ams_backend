@@ -30,6 +30,7 @@ import {
 } from "../controllers/submitInstalledSoftware.js";
 import {
   fetchSoftwareCategoryData,
+  fetchMaintenanceData,
   installSelectedCategories,
   fetchSingleSoftwareCategoryData,
 } from "../controllers/fetchSoftwareCategoryData.js";
@@ -59,5 +60,6 @@ router.get("/fetchSoftwarecategorydata", fetchSoftwareCategoryData);
 router.post("/installselectedcategories", installSelectedCategories);
 router.get("/fetchsingleSoftwarecategorydata", fetchSingleSoftwareCategoryData);
 router.get("/fetchassetinfo", fetchAssetInfo);
+router.get("/fetchmaintenancedata", fetchMaintenanceData);
 
 export default router;

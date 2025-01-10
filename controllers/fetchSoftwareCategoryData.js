@@ -182,8 +182,63 @@ const installSelectedCategories = async (req, res) => {
   }
 };
 
+const fetchMaintenanceData = async (req, res) => {
+  const { maintenancetype, selectedCategory, specificCategory } = req.query;
+
+  if (!maintenancetype || !selectedCategory) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "Missing required parameters: maintenancetype or selectedCategory",
+    });
+  }
+
+  try {
+    if (maintenancetype === "Hardware") {
+      const query = { assetType: selectedCategory };
+      if (specificCategory) {
+        query.category = specificCategory;
+      }
+
+      const availableCategoryHardware = await Hardware.find(query).select(
+        "_id assetName"
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: availableCategoryHardware,
+        message: "Hardware assets retrieved successfully",
+      });
+    }
+
+    if (maintenancetype === "Software") {
+      const availableCategorySoftware = await Softwares.find({
+        category: selectedCategory,
+      }).select("_id name");
+
+      return res.status(200).json({
+        success: true,
+        data: availableCategorySoftware,
+        message: "Software assets retrieved successfully",
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: "Unsupported maintenance type",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
+
 export {
   fetchSoftwareCategoryData,
   installSelectedCategories,
   fetchSingleSoftwareCategoryData,
+  fetchMaintenanceData,
 };
