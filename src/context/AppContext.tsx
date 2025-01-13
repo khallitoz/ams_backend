@@ -48,6 +48,7 @@ interface AppContextType extends StateType {
   logUserOff: () => Promise<void>;
   addHardwareDetails: (formData: FormData) => Promise<boolean>;
   addSofwareDetails: (values: {}) => Promise<boolean>;
+  addBulkMaintenance: (values: {}) => Promise<boolean>;
   updateHardwareDetails: (id: string, formData: FormData) => Promise<boolean>;
   getAllAssetDetails: (
     page: number,
@@ -94,8 +95,8 @@ interface AppContextType extends StateType {
   fetchSingleSoftwareCategories: (category: string, id: string) => Promise<any>;
   fetchMaintenanceData: (
     maintenanceType: string,
-    selectedCategory: string,
-    specificCategory: string
+    selectedCategory: string | null,
+    specificCategory: string | null
   ) => Promise<any>;
   updateSoftwareDetails: (id: string, values: {}) => Promise<boolean>;
   deleteSoftwareInfo: (id: string) => Promise<any>;
@@ -387,6 +388,99 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     try {
       const response = await axios.post(
         "http://localhost:5000/api/v1/amsservices/addsoftware",
+        values,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("Software submitted successfully!", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        return true;
+      }
+
+      return false;
+    } catch (error: any) {
+      if (error.response) {
+        // Handle 400 validation errors
+        if (error.response.status === 400 && error.response.data.errors) {
+          const errorMessages: { [key: string]: string } =
+            error.response.data.errors;
+          Object.values(errorMessages).forEach((errMsg) =>
+            toast.error(errMsg, {
+              position: "top-center",
+              autoClose: 2000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            })
+          );
+        }
+        // Handle other known error responses
+        else if (error.response.status === 500) {
+          toast.error(error.response.data.msg, {
+            position: "top-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+        // Fallback for other response errors
+        else {
+          toast.error(error.response.data.message || "An error occurred.", {
+            position: "top-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+      }
+      // Network or other unhandled errors
+      else if (error.request) {
+        toast.error("No response from the server. Please check your network.", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+      // Other unknown errors
+      else {
+        toast.error(`Error: ${error.message}`, {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+
+      return false;
+    }
+  };
+  const addBulkMaintenance = async (values: {}): Promise<boolean> => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/v1/amsservices/addbulkmaintenance",
         values,
         {
           headers: {
@@ -1183,8 +1277,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         `http://localhost:5000/api/v1/amsservices/fetchmaintenancedata?maintenancetype=${maintenanceType}&selectedCategory=${selectedCategory}&specificCategory=${specificCategory}`,
         config
       );
-
-      return fetchedDetail.data; // Return fetched details from the response
+      console.log(fetchedDetail);
+      return fetchedDetail.data.data; // Return fetched details from the response
     } catch (error: any) {
       toast.error(
         error.response?.data?.message || "Failed to fetch assigned details!",
@@ -1404,6 +1498,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         fetchAssetInfo,
         fetchSoftwareTickets,
         fetchMaintenanceData,
+        addBulkMaintenance,
       }}
     >
       {children}
