@@ -195,10 +195,19 @@ const fetchMaintenanceData = async (req, res) => {
 
   try {
     if (maintenancetype === "Hardware") {
+      // Start by creating the base query with only selectedCategory
       const query = { assetType: selectedCategory };
-      if (specificCategory) {
+
+      // Only add specificCategory if it's non-null, non-undefined, and non-empty
+      if (
+        specificCategory &&
+        specificCategory !== "null" &&
+        specificCategory !== ""
+      ) {
         query.category = specificCategory;
       }
+
+      console.log("this is query", query); // Log the query for debugging
 
       const availableCategoryHardware = await Hardware.find(query).select(
         "_id assetName"
@@ -212,9 +221,16 @@ const fetchMaintenanceData = async (req, res) => {
     }
 
     if (maintenancetype === "Software") {
-      const availableCategorySoftware = await Softwares.find({
-        category: selectedCategory,
-      }).select("_id name");
+      const query = {};
+
+      // Only add category if selectedCategory is truthy
+      if (selectedCategory) {
+        query.category = selectedCategory;
+      }
+
+      const availableCategorySoftware = await Softwares.find(query).select(
+        "_id name"
+      );
 
       return res.status(200).json({
         success: true,
@@ -236,9 +252,15 @@ const fetchMaintenanceData = async (req, res) => {
   }
 };
 
+const addBulkMaintenance = async (req, res) => {
+  const { values } = req.body;
+  console.log(req.body);
+};
+
 export {
   fetchSoftwareCategoryData,
   installSelectedCategories,
   fetchSingleSoftwareCategoryData,
   fetchMaintenanceData,
+  addBulkMaintenance,
 };

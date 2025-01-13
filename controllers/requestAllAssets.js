@@ -50,7 +50,7 @@ const requestSoftwareAssets = async (req, res) => {
     const skip = (page - 1) * limit;
     const searchQuery = req.query.searchQuery || ""; // Retrieve the search query
 
-    // If there's a search query, apply filtering
+    // If there's a search query, apply filteringss
     const searchFilter = searchQuery
       ? {
           $or: [

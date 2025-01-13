@@ -31,6 +31,7 @@ import {
 import {
   fetchSoftwareCategoryData,
   fetchMaintenanceData,
+  addBulkMaintenance,
   installSelectedCategories,
   fetchSingleSoftwareCategoryData,
 } from "../controllers/fetchSoftwareCategoryData.js";
@@ -61,5 +62,6 @@ router.post("/installselectedcategories", installSelectedCategories);
 router.get("/fetchsingleSoftwarecategorydata", fetchSingleSoftwareCategoryData);
 router.get("/fetchassetinfo", fetchAssetInfo);
 router.get("/fetchmaintenancedata", fetchMaintenanceData);
+router.post("/addbulkmaintenance", addBulkMaintenance);
 
 export default router;
