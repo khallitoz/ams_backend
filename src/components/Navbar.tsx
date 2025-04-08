@@ -42,75 +42,23 @@ const linkDesign = {
 
 const Navbar: React.FC = () => {
   const { token, logUserOff } = useAppContext();
-  const [selectedUrl, setSelectedUrl] = useState<string>("IT Assets");
+
   const router = useRouter();
 
   const logoutUser = () => {
     logUserOff();
   };
 
-  const handleLinkClick = (url: string) => {
-    // Store the selected URL in localStorage
-    localStorage.setItem("selectedUrl", url);
-    setSelectedUrl(url); // Update the state
-  };
-
-  useEffect(() => {
-    // Check if there is a stored value in localStorage for selectedUrl
-    const storedUrl = localStorage.getItem("selectedUrl");
-    if (storedUrl) {
-      setSelectedUrl(storedUrl);
-    }
-  }, []);
-
   return (
     <>
       {token && (
         <Box sx={navbarDesign}>
           {/* Display the selected URL */}
-          <Typography variant="h5" sx={{ color: "", fontWeight: "bold" }}>
-            {selectedUrl}
-          </Typography>
-
-          {/* Center Aligned Links */}
-          <Box sx={centerNavbarDesign}>
-            <Link href="/help-desk-it" passHref>
-              <Typography
-                component="a"
-                sx={linkDesign}
-                onClick={() => handleLinkClick("Help Desk-IT")}
-              >
-                Help Desk-IT
-              </Typography>
-            </Link>
-            <Link href="/procuras" passHref>
-              <Typography
-                component="a"
-                sx={linkDesign}
-                onClick={() => handleLinkClick("Procuras")}
-              >
-                Procuras
-              </Typography>
-            </Link>
-            <Link href="/user/allassets" passHref>
-              <Typography
-                component="a"
-                sx={linkDesign}
-                onClick={() => handleLinkClick("IT Assets")}
-              >
-                IT Assets
-              </Typography>
-            </Link>
-            <Link href="/request-approval" passHref>
-              <Typography
-                component="a"
-                sx={linkDesign}
-                onClick={() => handleLinkClick("Request/Approval")}
-              >
-                Request/Approval
-              </Typography>
-            </Link>
-          </Box>
+          <Typography
+            variant="h5"
+            height={40}
+            sx={{ color: "", fontWeight: "bold" }}
+          ></Typography>
         </Box>
       )}
     </>

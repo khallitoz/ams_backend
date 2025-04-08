@@ -63,7 +63,7 @@ const pdfStyle = {
 const AssetInfo: React.FC = () => {
   const { singleStateData } = useAppContext();
 
-  //   const basePath = "http://localhost:5000/uploads/";
+  //   const basePath = "http://localhost:4002/uploads/";
 
   const getFileType = (fileName: string) => {
     const extension = fileName.split(".").pop()?.toLowerCase();

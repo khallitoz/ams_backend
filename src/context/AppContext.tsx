@@ -8,7 +8,9 @@ import React, {
 import jwt_decode from "jwt-decode";
 import { useRouter } from "next/router";
 import axios from "axios";
-import { AppReducer } from "./AppReducer"; // Make sure this is typed if necessary
+import { AppReducer } from "./AppReducer";
+import { belzirAxiosGet, belzirAxiosPost } from "../utils/axiosHelper";
+// Make sure this is typed if necessary
 import {
   UPDATE_SINGLE_DETAILS_STATE,
   UPDATE_SOFTWARE_DETAILS_STATE,
@@ -121,10 +123,21 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
 
+  // Add function to get token from cookies
+  const getTokenFromCookies = () => {
+    const cookies = document.cookie.split(";").reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split("=");
+      acc[key] = value;
+      return acc;
+    }, {} as Record<string, string>);
+    return cookies.token || cookies.accessToken;
+  };
+
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    if (storedToken) {
-      setToken(storedToken);
+    // Get token from cookies instead of localStorage
+    const cookieToken = getTokenFromCookies();
+    if (cookieToken) {
+      setToken(cookieToken);
     }
   }, []);
 
@@ -136,9 +149,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     role: string[]
   ) => {
     try {
-      localStorage.setItem("token", token);
+      // Update to use cookies instead of localStorage
+      document.cookie = `token=${token}; path=/; max-age=86400`;
     } catch (error) {
-      console.error("Error storing user data in localStorage:", error);
+      console.error("Error storing user data in cookies:", error);
     }
   };
 
@@ -179,25 +193,29 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     );
 
     if (isloggedOut) {
-      localStorage.clear();
+      // Clear cookies instead of localStorage
+      document.cookie = "token=; path=/; max-age=0";
+      document.cookie = "accessToken=; path=/; max-age=0";
+      localStorage.clear(); // Keep this to clear any other localStorage items
       setToken(null);
       router.push("/");
     }
   };
 
   const addHardwareDetails = async (formData: FormData): Promise<boolean> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     console.log("FormData being sent:", formData);
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/v1/amsservices/addhardware",
+        "http://localhost:4002/api/v1/amsservices/addhardware",
         formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
+          withCredentials: true,
         }
       );
 
@@ -285,11 +303,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     selectedSoftwares: string[],
     selectedHardwares: string[]
   ): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/v1/amsservices/installselectedcategories",
+        "http://localhost:4002/api/v1/amsservices/installselectedcategories",
         {
           softwareIds: selectedSoftwares,
           hardwareIds: selectedHardwares,
@@ -297,8 +315,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json", // Use JSON for array data
           },
+          withCredentials: true,
         }
       );
 
@@ -383,17 +401,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const addSofwareDetails = async (values: {}): Promise<boolean> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/v1/amsservices/addsoftware",
-        values,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await belzirAxiosPost(
+        "http://localhost:4002/api/v1/amsservices/addsoftware",
+        values
       );
 
       if (response.data.success) {
@@ -476,11 +489,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
   const addBulkMaintenance = async (values: {}): Promise<boolean> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/v1/amsservices/addbulkmaintenance",
+        "http://localhost:4002/api/v1/amsservices/addbulkmaintenance",
         values,
         {
           headers: {
@@ -573,10 +586,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     id: string,
     formData: FormData
   ): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/v1/amsservices/updatehardware/${id}`,
+        `http://localhost:4002/api/v1/amsservices/updatehardware/${id}`,
         formData,
         {
           headers: {
@@ -670,10 +683,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     id: string,
     values: any
   ): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/v1/amsservices/updatesoftware/${id}`,
+        `http://localhost:4002/api/v1/amsservices/updatesoftware/${id}`,
         values,
         {
           headers: {
@@ -728,17 +741,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     limit = 10,
     searchQuery = ""
   ): Promise<any> => {
-    const token = localStorage.getItem("token");
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/requestallassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`,
-        config
+      const response = await belzirAxiosGet(
+        `http://localhost:4002/api/v1/amsservices/requestallassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`
       );
 
       return response.data;
@@ -760,17 +765,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     limit = 10,
     searchQuery = ""
   ): Promise<any> => {
-    const token = localStorage.getItem("token");
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
+    const token = getTokenFromCookies();
 
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/requestsoftwareassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`,
-        config
+      const response = await belzirAxiosGet(
+        `http://localhost:4002/api/v1/amsservices/requestsoftwareassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`
       );
 
       return response.data;
@@ -793,7 +792,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     limit = 10,
     searchQuery = ""
   ): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -802,7 +801,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/requestcheckinassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`,
+        `http://localhost:4002/api/v1/amsservices/requestcheckinassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`,
         config
       );
 
@@ -826,7 +825,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     limit = 10,
     searchQuery = ""
   ): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -835,7 +834,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/requestcheckoutassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`,
+        `http://localhost:4002/api/v1/amsservices/requestcheckoutassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`,
         config
       );
 
@@ -858,7 +857,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     limit = 10,
     searchQuery = ""
   ): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -867,7 +866,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/requestinactiveassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`,
+        `http://localhost:4002/api/v1/amsservices/requestinactiveassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`,
         config
       );
 
@@ -886,9 +885,17 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
   const getTabBarCounter = async (): Promise<any> => {
+    const token = getTokenFromCookies();
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      withCredentials: true,
+    };
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/tabbarcounter`
+        `http://localhost:4002/api/v1/amsservices/tabbarcounter`,
+        config
       );
 
       return response.data;
@@ -908,12 +915,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const getSingleAssetDetail = async (
     assetId: string
   ): Promise<{ success: boolean; data?: any; error?: string }> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
 
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      withCredentials: true,
     };
 
     if (!assetId || typeof assetId !== "string" || !assetId.trim()) {
@@ -922,7 +930,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/requestsingleasset?assetId=${assetId}`,
+        `http://localhost:4002/api/v1/amsservices/requestsingleasset?assetId=${assetId}`,
         config
       );
 
@@ -953,7 +961,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const getSoftwareAssetDetail = async (
     assetId: string
   ): Promise<{ success: boolean; data?: any; error?: string }> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
 
     const config = {
       headers: {
@@ -967,7 +975,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/requestsoftwareassetdetails?assetId=${assetId}`,
+        `http://localhost:4002/api/v1/amsservices/requestsoftwareassetdetails?assetId=${assetId}`,
         config
       );
 
@@ -995,7 +1003,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
   const searchAsset = async (searchQuery: string): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1004,7 +1012,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       const searchedAssets = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/requestsearchedasset?searchQuery=${searchQuery}`,
+        `http://localhost:4002/api/v1/amsservices/requestsearchedasset?searchQuery=${searchQuery}`,
         config
       );
 
@@ -1022,16 +1030,17 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const submitAssignedAsset = async (submissionData: any): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/v1/amsservices/assignasset",
+        "http://localhost:4002/api/v1/amsservices/assignasset",
         submissionData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          withCredentials: true,
         }
       );
 
@@ -1075,11 +1084,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const submitInstalledSoftware = async (submissionData: any): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/v1/amsservices/submitinstalledsoftware",
+        "http://localhost:4002/api/v1/amsservices/submitinstalledsoftware",
         submissionData,
         {
           headers: {
@@ -1127,7 +1136,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const fetchInstalledSoftwares = async (id: string): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1136,7 +1145,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       const fetchedDetail = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/fetchinstalledsoftwares?assetId=${id}`,
+        `http://localhost:4002/api/v1/amsservices/fetchinstalledsoftwares?assetId=${id}`,
         config
       );
 
@@ -1160,7 +1169,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const fetchAssetInfo = async (assetType: string): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1169,7 +1178,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       const fetchedDetail = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/fetchassetinfo?assetType=${assetType}`,
+        `http://localhost:4002/api/v1/amsservices/fetchassetinfo?assetType=${assetType}`,
         config
       );
 
@@ -1193,7 +1202,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const fetchAssociatedHardware = async (id: string): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1202,7 +1211,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       const fetchedDetail = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/fetchassociatedhardwares?assetId=${id}`,
+        `http://localhost:4002/api/v1/amsservices/fetchassociatedhardwares?assetId=${id}`,
         config
       );
 
@@ -1228,7 +1237,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const fetchSoftwareCategoriesData = async (
     category: string
   ): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1237,7 +1246,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       const fetchedDetail = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/fetchSoftwarecategorydata?category=${category}`,
+        `http://localhost:4002/api/v1/amsservices/fetchSoftwarecategorydata?category=${category}`,
         config
       );
 
@@ -1262,19 +1271,22 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   const fetchMaintenanceData = async (
     maintenanceType: string,
-    selectedCategory: string,
-    specificCategory: string
+    selectedCategory: string | null,
+    specificCategory: string | null
   ): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      withCredentials: true,
     };
 
     try {
       const fetchedDetail = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/fetchmaintenancedata?maintenancetype=${maintenanceType}&selectedCategory=${selectedCategory}&specificCategory=${specificCategory}`,
+        `http://localhost:4002/api/v1/amsservices/fetchmaintenancedata?maintenancetype=${maintenanceType}&selectedCategory=${
+          selectedCategory || ""
+        }&specificCategory=${specificCategory || ""}`,
         config
       );
       console.log(fetchedDetail);
@@ -1301,7 +1313,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     id: string
   ): Promise<any> => {
     console.log(id);
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1310,7 +1322,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       const fetchedDetail = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/fetchsingleSoftwarecategorydata?category=${category}&softwareId=${id}
+        `http://localhost:4002/api/v1/amsservices/fetchsingleSoftwarecategorydata?category=${category}&softwareId=${id}
 `,
         config
       );
@@ -1335,7 +1347,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const fetchAssignedDetails = async (id: string): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1344,7 +1356,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       const fetchedDetail = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/fetchassignasset?assetId=${id}`,
+        `http://localhost:4002/api/v1/amsservices/fetchassignasset?assetId=${id}`,
         config
       );
 
@@ -1368,7 +1380,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const deleteSoftwareInfo = async (id: string): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1377,7 +1389,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       const fetchedDetail = await axios.post(
-        `http://localhost:5000/api/v1/amsservices/deletesoftwareinfo?softwareId=${id}`,
+        `http://localhost:4002/api/v1/amsservices/deletesoftwareinfo?softwareId=${id}`,
         config
       );
 
@@ -1401,7 +1413,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const retrieveSoftwareList = async (): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1410,7 +1422,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/v1/amsservices/retrievesoftwarelist`,
+        `http://localhost:4002/api/v1/amsservices/retrievesoftwarelist`,
         config
       );
 
@@ -1433,16 +1445,16 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     searchQuery = "",
     id: string
   ): Promise<any> => {
-    const token = localStorage.getItem("token");
+    const token = getTokenFromCookies();
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      withCredentials: true,
     };
     try {
       const fetchedDetail = await axios.get(
-        `http://10.0.6.56:5000/api/tickets/fetchdetails?page=${page}&limit=${limit}&searchQuery=${searchQuery}&softwareId=${id}
-`,
+        `http://10.0.6.56:5000/api/tickets/fetchdetails?page=${page}&limit=${limit}&searchQuery=${searchQuery}&softwareId=${id}`,
         config
       );
 
