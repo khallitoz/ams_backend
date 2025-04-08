@@ -1,4 +1,3 @@
-import Hardware from "../models/HardwareDetails.js";
 import { StatusCodes } from "http-status-codes";
 import QRCode from "qrcode";
 import { nanoid } from "nanoid";
@@ -109,6 +108,7 @@ const addHardwareDetails = async (req, res) => {
 
   try {
     //  Validate Form Data
+    const Hardware = req.models.Hardware;
     const errors = validateForm(req.body);
     if (Object.keys(errors).length > 0) {
       return res.status(StatusCodes.BAD_REQUEST).json({

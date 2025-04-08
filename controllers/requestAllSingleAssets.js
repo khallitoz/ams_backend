@@ -5,6 +5,7 @@ import installedSoftwares from "../models/InstallSoftware.js";
 
 const requestAllSingleAssets = async (req, res) => {
   const { assetId } = req.query;
+  const Hardware = req.models.Hardware;
 
   try {
     // Fetch all assets from the database

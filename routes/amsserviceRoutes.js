@@ -35,33 +35,48 @@ import {
   installSelectedCategories,
   fetchSingleSoftwareCategoryData,
 } from "../controllers/fetchSoftwareCategoryData.js";
+import withModels from "../middleware/withModels.js";
+import dbConnection from "../middleware/dbConnection.js";
+
 const router = express.Router();
 
-// Upload files and add hardware details
-router.post("/addhardware", uploadFiles, addHardwareDetails);
-router.post("/addsoftware", addSoftware);
-router.get("/retrievesoftwarelist", retrieveSoftwareList);
-router.get("/requestallassets", requestAllAssets);
-router.get("/requestcheckinassets", requestCheckInassets);
-router.get("/requestcheckoutassets", requestCheckOutassets);
-router.get("/requestinactiveassets", requestInActiveassets);
-router.get("/tabbarcounter", tabbarCounter);
-router.get("/requestsoftwareassets", requestSoftwareAssets);
-router.get("/requestsingleasset", requestAllSingleAssets);
-router.get("/requestsoftwareassetdetails", requestSoftwareAssetDetails);
-router.post("/assignasset", assignAsset);
-router.post("/submitinstalledsoftware", submitInstalledSoftware);
-router.post("/deletesoftwareinfo", deleteSoftwareDetails);
-router.get("/fetchinstalledsoftwares", fetchInstalledSoftwares);
-router.get("/fetchassignasset", fetchAssignAsset);
-router.put("/updatehardware/:id", uploadFiles, updateHardware);
-router.get("/fetchassociatedhardwares", fetchAssociatedHardwares);
-router.put("/updatesoftware/:id", updateSoftware);
-router.get("/fetchSoftwarecategorydata", fetchSoftwareCategoryData);
-router.post("/installselectedcategories", installSelectedCategories);
-router.get("/fetchsingleSoftwarecategorydata", fetchSingleSoftwareCategoryData);
-router.get("/fetchassetinfo", fetchAssetInfo);
-router.get("/fetchmaintenancedata", fetchMaintenanceData);
-router.post("/addbulkmaintenance", addBulkMaintenance);
+// Apply dbConnection middleware to all routes to extract client_id from token
+
+
+// Routes now only need withModels as dbConnection is applied to all routes
+router.post("/addhardware",dbConnection, uploadFiles, withModels(addHardwareDetails));
+router.post("/addsoftware",dbConnection, withModels(addSoftware));
+router.get("/retrievesoftwarelist",dbConnection, withModels(retrieveSoftwareList));
+router.get("/requestallassets",dbConnection, withModels(requestAllAssets));
+router.get("/requestcheckinassets",dbConnection, withModels(requestCheckInassets));
+router.get("/requestcheckoutassets",dbConnection, withModels(requestCheckOutassets));
+router.get("/requestinactiveassets",dbConnection, withModels(requestInActiveassets));
+router.get("/tabbarcounter",dbConnection, withModels(tabbarCounter));
+router.get("/requestsoftwareassets",dbConnection, withModels(requestSoftwareAssets));
+router.get("/requestsingleasset",dbConnection, withModels(requestAllSingleAssets));
+router.get(
+  "/requestsoftwareassetdetails",dbConnection,
+  withModels(requestSoftwareAssetDetails)
+);
+router.post("/assignasset",dbConnection, withModels(assignAsset));
+router.post("/submitinstalledsoftware",dbConnection, withModels(submitInstalledSoftware));
+router.post("/deletesoftwareinfo",dbConnection, withModels(deleteSoftwareDetails));
+router.get("/fetchinstalledsoftwares",dbConnection, withModels(fetchInstalledSoftwares));
+router.get("/fetchassignasset",dbConnection, withModels(fetchAssignAsset));
+router.put("/updatehardware/:id",dbConnection, uploadFiles, withModels(updateHardware));
+router.get("/fetchassociatedhardwares",dbConnection, withModels(fetchAssociatedHardwares));
+router.put("/updatesoftware/:id",dbConnection, withModels(updateSoftware));
+router.get("/fetchSoftwarecategorydata",dbConnection, withModels(fetchSoftwareCategoryData));
+router.post(
+  "/installselectedcategories",dbConnection,
+  withModels(installSelectedCategories)
+);
+router.get(
+  "/fetchsingleSoftwarecategorydata",dbConnection,
+  withModels(fetchSingleSoftwareCategoryData)
+);
+router.get("/fetchassetinfo",dbConnection, withModels(fetchAssetInfo));
+router.get("/fetchmaintenancedata",dbConnection, withModels(fetchMaintenanceData));
+router.post("/addbulkmaintenance",dbConnection, withModels(addBulkMaintenance));
 
 export default router;

@@ -40,6 +40,7 @@ const validateForm = (values) => {
 
 const addSoftware = async (req, res) => {
   try {
+    const AllSoftwares = req.models.AllSoftwares;
     const errors = validateForm(req.body);
     if (Object.keys(errors).length > 0) {
       return res.status(StatusCodes.BAD_REQUEST).json({
@@ -51,7 +52,7 @@ const addSoftware = async (req, res) => {
     const { price, quantity } = req.body;
     const totalCost = price * quantity;
 
-    const softwaresInstalled = new Softwares({
+    const softwaresInstalled = new AllSoftwares({
       ...req.body,
       totalCost: totalCost,
       assignedQuantity: 0,

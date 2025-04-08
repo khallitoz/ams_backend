@@ -1,9 +1,9 @@
-import Hardware from "../models/HardwareDetails.js";
 import { StatusCodes } from "http-status-codes";
-import Softwares from "../models/Softwares.js";
 
 const requestAllAssets = async (req, res) => {
   try {
+    const Hardware = req.models.Hardware;
+
     const page = Number(req.query.page) || 1; // 1-based index
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -45,6 +45,8 @@ const requestAllAssets = async (req, res) => {
 
 const requestSoftwareAssets = async (req, res) => {
   try {
+    const AllSoftwares = req.models.AllSoftwares;
+    console.log(req.body);
     const page = Number(req.query.page) || 1; // 1-based index
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -64,11 +66,11 @@ const requestSoftwareAssets = async (req, res) => {
       : {}; // No filter if searchQuery is empty
 
     // Apply filtering and pagination
-    const assets = await Softwares.find(searchFilter)
+    const assets = await AllSoftwares.find(searchFilter)
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
-    const totalAssets = await Softwares.countDocuments(searchFilter); // Total matching asset count
+    const totalAssets = await AllSoftwares.countDocuments(searchFilter); // Total matching asset count
 
     res.status(StatusCodes.OK).json({
       data: assets,
@@ -86,6 +88,8 @@ const requestSoftwareAssets = async (req, res) => {
 
 const requestCheckOutassets = async (req, res) => {
   try {
+    const Hardware = req.models.Hardware;
+
     const page = Number(req.query.page) || 1; // 1-based index
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -132,8 +136,11 @@ const requestCheckOutassets = async (req, res) => {
     });
   }
 };
+
 const requestCheckInassets = async (req, res) => {
   try {
+    const Hardware = req.models.Hardware;
+
     const page = Number(req.query.page) || 1; // 1-based index
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -179,8 +186,11 @@ const requestCheckInassets = async (req, res) => {
     });
   }
 };
+
 const requestInActiveassets = async (req, res) => {
   try {
+    const Hardware = req.models.Hardware;
+
     const page = Number(req.query.page) || 1; // 1-based index
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -230,6 +240,8 @@ const requestInActiveassets = async (req, res) => {
 // API to get counts of hardware statuses and total assets
 const tabbarCounter = async (req, res) => {
   try {
+    const Hardware = req.models.Hardware;
+
     const statusCounts = await Hardware.aggregate([
       {
         $facet: {
