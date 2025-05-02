@@ -1,5 +1,8 @@
 import { StatusCodes } from "http-status-codes";
 import jwt from "jsonwebtoken";
+import connectDb from "../db/connectDb.js";
+import { getConnections } from "../db/connectDb.js";
+import modelRegistry from "../db/ModelRegistry.js";
 
 /**
  * Middleware to extract client ID from token and attach it to the request
@@ -7,7 +10,6 @@ import jwt from "jsonwebtoken";
  */
 const dbConnection = async (req, res, next) => {
   try {
-    console.log(req.cookies);
     // Get token from cookies or authorization header
     const token = req.cookies.auth_token || req.cookies.refresh_token;
 
@@ -34,7 +36,46 @@ const dbConnection = async (req, res, next) => {
     // Attach client_id to request object
     req.client_id = client_id;
 
-    console.log(`Client ID extracted from token: ${client_id}`);
+    // Check if a connection exists for this client
+    const connections = getConnections();
+    const clientConnection = connections.find((conn) => conn.key === client_id);
+
+    // If no connection exists or the connection is not in a connected state, create a new one
+    if (!clientConnection || clientConnection.connectionState !== 1) {
+      console.log(
+        `No active connection found for client ${client_id}, creating a new one`
+      );
+
+      // Clear any stale models for this client from the model registry
+      modelRegistry.clearClientModels(client_id);
+
+      try {
+        // Create a new connection
+        const { connection, models } = await connectDb(
+          process.env.MONGO_URI,
+          client_id
+        );
+
+        // Store models in the registry
+        modelRegistry.setModels(client_id, models);
+
+        console.log(
+          `Successfully created new connection for client ${client_id}`
+        );
+      } catch (error) {
+        console.error(
+          `Error creating connection for client ${client_id}:`,
+          error
+        );
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+          success: false,
+          message: "Failed to establish database connection",
+          error: error.message,
+        });
+      }
+    } else {
+      console.log(`Using existing connection for client ${client_id}`);
+    }
 
     next();
   } catch (error) {

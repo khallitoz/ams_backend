@@ -23,8 +23,8 @@ const HardwareSchema = new mongoose.Schema(
     building: { type: String, required: true },
     room: { type: String, required: true },
     department: { type: String, required: true },
-    uniqueId: { type: Number, unique: true },
-    qrCode: { type: String, unique: true }, // Unique QR Code field
+    uniqueId: { type: Number },
+    qrCode: { type: String }, // Unique QR Code field
     checkoutstatus: {
       type: [String],
       enum: ["Check Out", "Check In", "InActive"],
@@ -47,6 +47,10 @@ const HardwareSchema = new mongoose.Schema(
       os: { type: String },
       osVersion: { type: String },
       ipAddress: { type: String },
+    },
+    assetNumber: {
+      type: String,
+      required: true,
     },
   },
   {

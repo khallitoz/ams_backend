@@ -1,5 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 import modelRegistry from "../db/ModelRegistry.js";
+import { getConnections } from "../db/connectDb.js";
 
 /**
  * Middleware factory that wraps controller functions to ensure models are available
@@ -15,6 +16,23 @@ const withModels = (controller) => {
           success: false,
           message: "Client ID not found in request",
         });
+      }
+
+      // Check if we have models in the registry
+      if (modelRegistry.hasModels(req.client_id)) {
+        // Check if the connection is still active
+        const connections = getConnections();
+        const clientConnection = connections.find(
+          (conn) => conn.key === req.client_id
+        );
+
+        // If connection is not active, clear models and get new ones
+        if (!clientConnection || clientConnection.connectionState !== 1) {
+          console.log(
+            `Connection for client ${req.client_id} is not active, getting new models`
+          );
+          modelRegistry.clearClientModels(req.client_id);
+        }
       }
 
       // Get models from the registry using the client_id

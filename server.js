@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 
 import morgan from "morgan";
 import "express-async-errors";
-import { closeAllConnections } from "./db/connectDb.js";
+import { closeAllConnections, getConnections } from "./db/connectDb.js";
 import modelRegistry from "./db/ModelRegistry.js";
 
 import amsservicesRouter from "./routes/amsserviceRoutes.js";
@@ -12,7 +12,15 @@ import { authorizeBackblaze } from "./config/backblaze.js";
 
 import cors from "cors";
 import authRouter from "./routes/authRoutes.js";
+import locationRouter from "./routes/locationRoutes.js";
 import cookieParser from "cookie-parser";
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT_NO; // Use a default port if PORT_NO is not defined
@@ -42,11 +50,18 @@ if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev")); // Logging in non-production environments
 }
 
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 app.use(express.static("./public")); // Serve static files
 app.use("/uploads", express.static("uploads"));
 
 app.use("/api/v1/amsservices", amsservicesRouter);
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/locations", locationRouter);
 
 app.use(errorHandlerMiddleware);
 
@@ -55,6 +70,16 @@ app.get("/api/v1/status", (req, res) => {
   res.json({
     status: "ok",
     connections: modelRegistry.getStats(),
+  });
+});
+
+// Debug endpoint
+app.get("/api/v1/debug/connections", (req, res) => {
+  const connectionDetails = getConnections();
+
+  res.json({
+    totalConnections: connectionDetails.length,
+    connections: connectionDetails,
   });
 });
 

@@ -5,7 +5,8 @@ import { StatusCodes } from "http-status-codes";
 const assignAsset = async (req, res) => {
   try {
     const { action, assignedTo, date, status, id } = req.body;
-
+    const AssignedAssetDetail = req.models.AssignedAsset;
+    const Hardware = req.models.Hardware;
     // Validate required fields
     if (!id) {
       return res.status(StatusCodes.BAD_REQUEST).json({

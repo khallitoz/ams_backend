@@ -52,15 +52,40 @@ const requestSoftwareAssets = async (req, res) => {
     const skip = (page - 1) * limit;
     const searchQuery = req.query.searchQuery || ""; // Retrieve the search query
 
-    // If there's a search query, apply filteringss
+    // If there's a search query, apply filtering
     const searchFilter = searchQuery
       ? {
           $or: [
             { name: { $regex: searchQuery, $options: "i" } },
             { vendor: { $regex: searchQuery, $options: "i" } },
             { licenseType: { $regex: searchQuery, $options: "i" } },
-            { price: { $regex: searchQuery, $options: "i" } },
-            { quantity: { $regex: searchQuery, $options: "i" } },
+            // Convert price to string for regex search
+            {
+              $expr: {
+                $regexMatch: {
+                  input: { $toString: "$price" },
+                  regex: searchQuery,
+                  options: "i",
+                },
+              },
+            },
+            // Convert quantity to string for regex search
+            {
+              $expr: {
+                $regexMatch: {
+                  input: { $toString: "$quantity" },
+                  regex: searchQuery,
+                  options: "i",
+                },
+              },
+            },
+            // Add exact numeric match if search query is a number
+            ...(!isNaN(parseFloat(searchQuery))
+              ? [
+                  { price: parseFloat(searchQuery) },
+                  { quantity: parseFloat(searchQuery) },
+                ]
+              : []),
           ],
         }
       : {}; // No filter if searchQuery is empty
@@ -110,6 +135,33 @@ const requestCheckOutassets = async (req, res) => {
                 { category: { $regex: searchQuery, $options: "i" } },
                 { condition: { $regex: searchQuery, $options: "i" } },
                 { location: { $regex: searchQuery, $options: "i" } },
+                // Convert price to string for regex search
+                {
+                  $expr: {
+                    $regexMatch: {
+                      input: { $toString: "$price" },
+                      regex: searchQuery,
+                      options: "i",
+                    },
+                  },
+                },
+                // Convert quantity to string for regex search
+                {
+                  $expr: {
+                    $regexMatch: {
+                      input: { $toString: "$quantity" },
+                      regex: searchQuery,
+                      options: "i",
+                    },
+                  },
+                },
+                // Add exact numeric match if search query is a number
+                ...(!isNaN(parseFloat(searchQuery))
+                  ? [
+                      { price: parseFloat(searchQuery) },
+                      { quantity: parseFloat(searchQuery) },
+                    ]
+                  : []),
               ],
             },
           ],

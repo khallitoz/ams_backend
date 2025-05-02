@@ -77,7 +77,8 @@ const addSoftware = async (req, res) => {
 
 const retrieveSoftwareList = async (req, res) => {
   try {
-    const retrievedSoftware = await Softwares.find();
+    const AllSoftwares = req.models.AllSoftwares;
+    const retrievedSoftware = await AllSoftwares.find();
 
     res.status(StatusCodes.OK).json({
       success: true,

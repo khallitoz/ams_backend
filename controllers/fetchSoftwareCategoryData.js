@@ -3,12 +3,22 @@ import Softwares from "../models/Softwares.js";
 import { StatusCodes } from "http-status-codes";
 import installedSoftwares from "../models/InstallSoftware.js";
 import mongoose from "mongoose";
+import { nanoid } from "nanoid";
+
+// Generate a unique ID for maintenance tasks
+const generateUniqueId = () => {
+  const timestamp = Date.now().toString(36); // Convert timestamp to base36
+  const random = nanoid(8); // Generate 8 random characters
+  return `MT-${timestamp}-${random}`; // Format: MT-timestamp-random
+};
 
 const fetchSoftwareCategoryData = async (req, res) => {
   const { category } = req.query;
 
+  const AllSoftwares = req.models.AllSoftwares;
+  const Hardware = req.models.Hardware;
   try {
-    const availableCategorySoftware = await Softwares.find({
+    const availableCategorySoftware = await AllSoftwares.find({
       category: category,
     }).select("_id name");
 
@@ -32,9 +42,11 @@ const fetchSoftwareCategoryData = async (req, res) => {
 
 const fetchSingleSoftwareCategoryData = async (req, res) => {
   const { category, softwareId } = req.query;
-  console.log(softwareId, category);
+
+  const AllSoftwares = req.models.AllSoftwares;
+  const Hardware = req.models.Hardware;
   try {
-    const availableCategorySoftware = await Softwares.findOne({
+    const availableCategorySoftware = await AllSoftwares.findOne({
       category: category, // Filter by category
       _id: softwareId, // Filter by specific software ID
     }).select("_id name");
@@ -58,12 +70,23 @@ const fetchSingleSoftwareCategoryData = async (req, res) => {
 };
 // Controller for Bulk Installation
 const installSelectedCategories = async (req, res) => {
-  const session = await mongoose.startSession();
+  console.log(req.body);
 
   try {
+    // Get models from req.models
+    const AllSoftwares = req.models.AllSoftwares;
+    const Hardware = req.models.Hardware;
+    const installedSoftwares = req.models.InstallSoftware;
+
+    // Start a session from one model's connection
+    // All models created from the same connection will share session capabilities
+    const session = await AllSoftwares.startSession();
+
+    await session.startTransaction();
+
     const { softwareIds, hardwareIds } = req.body;
 
-    //  Validate Inputs
+    // Validate inputs
     if (!Array.isArray(softwareIds) || softwareIds.length === 0) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
@@ -78,10 +101,7 @@ const installSelectedCategories = async (req, res) => {
       });
     }
 
-    // Start Transaction
-    await session.startTransaction();
-
-    //  Step 1: Check for Already Installed Software on Hardware
+    // Use the session with all models
     const alreadyInstalled = await installedSoftwares
       .find({
         hardwareId: { $in: hardwareIds },
@@ -114,7 +134,7 @@ const installSelectedCategories = async (req, res) => {
     }
 
     //   Validate Software Stock
-    const softwareDetails = await Softwares.find({
+    const softwareDetails = await AllSoftwares.find({
       _id: { $in: softwareIds },
     }).session(session);
 
@@ -141,7 +161,7 @@ const installSelectedCategories = async (req, res) => {
       },
     }));
 
-    await Softwares.bulkWrite(bulkUpdateOperations, { session });
+    await AllSoftwares.bulkWrite(bulkUpdateOperations, { session });
 
     //  Step 4: Bulk Insert Installation Records
     const installedRecords = [];
@@ -184,7 +204,8 @@ const installSelectedCategories = async (req, res) => {
 
 const fetchMaintenanceData = async (req, res) => {
   const { maintenancetype, selectedCategory, specificCategory } = req.query;
-
+  const AllSoftwares = req.models.AllSoftwares;
+  const Hardware = req.models.Hardware;
   if (!maintenancetype || !selectedCategory) {
     return res.status(400).json({
       success: false,
@@ -228,7 +249,7 @@ const fetchMaintenanceData = async (req, res) => {
         query.category = selectedCategory;
       }
 
-      const availableCategorySoftware = await Softwares.find(query).select(
+      const availableCategorySoftware = await AllSoftwares.find(query).select(
         "_id name"
       );
 
@@ -253,8 +274,197 @@ const fetchMaintenanceData = async (req, res) => {
 };
 
 const addBulkMaintenance = async (req, res) => {
-  const { values } = req.body;
-  console.log(req.body);
+  const {
+    selectedAssets,
+    assignedTo,
+    status,
+    priority,
+    taskName,
+    description,
+    dueDate,
+  } = req.body;
+
+  console.log("this is req.body", req.body);
+  const Maintenance = req.models.Maintenance;
+
+  // Validate required fields
+  const requiredFields = {
+    selectedAssets,
+    assignedTo,
+    status,
+    priority,
+    taskName,
+    description,
+    dueDate,
+  };
+
+  const missingFields = Object.entries(requiredFields)
+    .filter(([_, value]) => !value)
+    .map(([key]) => key);
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  // Validate selectedAssets is an array and not empty
+  if (!Array.isArray(selectedAssets) || selectedAssets.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "At least one asset must be selected",
+    });
+  }
+
+  // Validate status and priority values
+  const validStatuses = ["Pending", "In Progress", "Completed", "Deferred"];
+  const validPriorities = ["Low", "Medium", "High", "Critical"];
+
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
+    });
+  }
+
+  if (!validPriorities.includes(priority)) {
+    return res.status(400).json({
+      success: false,
+      message: `Invalid priority. Must be one of: ${validPriorities.join(
+        ", "
+      )}`,
+    });
+  }
+
+  // Validate dueDate is a valid future date
+  const dueDateObj = new Date(dueDate);
+  if (isNaN(dueDateObj.getTime()) || dueDateObj < new Date()) {
+    return res.status(400).json({
+      success: false,
+      message: "Due date must be a valid future date",
+    });
+  }
+
+  // Generate a date-based sequential asset number
+  const today = new Date();
+  const dateStr = today.toISOString().slice(0, 10).replace(/-/g, "");
+
+  // Create a separate variable for start of day
+  const startOfDay = new Date(today);
+  startOfDay.setHours(0, 0, 0, 0);
+
+  // Count hardware assets created today
+  const countToday = await Maintenance.countDocuments({
+    createdAt: {
+      $gte: startOfDay,
+    },
+  });
+
+  // Format as 3-digit sequence (001, 002, etc.)
+  const sequence = (countToday + 1).toString().padStart(3, "0");
+
+  // Create asset number: HW-20230615-001
+  const maintenanceId = `MT-${dateStr}-${sequence}`;
+
+  // Start a session for transaction
+  const session = await Maintenance.startSession();
+  session.startTransaction();
+
+  try {
+    // Create maintenance records for each selected asset
+    const maintenanceRecords = selectedAssets.map((asset) => ({
+      maintenanceId,
+      assetName: asset.name || asset.assetName,
+      assetId: asset._id,
+      assetType: asset.assetType,
+      category: asset.category,
+      assignedTo,
+      status,
+      priority,
+      taskName,
+      description,
+      dueDate: dueDateObj,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
+
+    // Insert all maintenance records
+    await Maintenance.insertMany(maintenanceRecords, { session });
+
+    // Commit the transaction
+    await session.commitTransaction();
+
+    return res.status(201).json({
+      success: true,
+      message: `Successfully created ${maintenanceRecords.length} maintenance tasks`,
+      data: {
+        count: maintenanceRecords.length,
+        tasks: maintenanceRecords,
+      },
+    });
+  } catch (error) {
+    // If anything fails, abort the transaction
+    await session.abortTransaction();
+
+    console.error("Error creating bulk maintenance tasks:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create maintenance tasks",
+      error: error.message,
+    });
+  } finally {
+    // Always end the session
+    session.endSession();
+  }
+};
+
+const fetchAllMaintenance = async (req, res) => {
+  const { page = 1, limit = 10, searchQuery = "" } = req.query;
+  const Maintenance = req.models.Maintenance;
+
+  try {
+    // Create search query
+    const query = searchQuery
+      ? {
+          $or: [
+            { taskName: { $regex: searchQuery, $options: "i" } },
+            { assetName: { $regex: searchQuery, $options: "i" } },
+            { maintenanceId: { $regex: searchQuery, $options: "i" } },
+            { category: { $regex: searchQuery, $options: "i" } },
+            { status: { $regex: searchQuery, $options: "i" } },
+            { priority: { $regex: searchQuery, $options: "i" } },
+            { assignedTo: { $regex: searchQuery, $options: "i" } },
+          ],
+        }
+      : {};
+
+    // Get total count for pagination
+    const total = await Maintenance.countDocuments(query);
+
+    // Fetch maintenance tasks with pagination
+    const maintenanceTasks = await Maintenance.find(query)
+      .sort({ createdAt: -1 }) // Sort by newest first
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      data: maintenanceTasks,
+      totalMaintenance: total,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    console.error("Error fetching maintenance tasks:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch maintenance tasks",
+      error: error.message,
+    });
+  }
 };
 
 export {
@@ -263,4 +473,5 @@ export {
   fetchSingleSoftwareCategoryData,
   fetchMaintenanceData,
   addBulkMaintenance,
+  fetchAllMaintenance,
 };

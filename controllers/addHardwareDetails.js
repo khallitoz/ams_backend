@@ -118,6 +118,27 @@ const addHardwareDetails = async (req, res) => {
       });
     }
 
+    // Generate a date-based sequential asset number
+    const today = new Date();
+    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, "");
+
+    // Create a separate variable for start of day
+    const startOfDay = new Date(today);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    // Count hardware assets created today
+    const countToday = await Hardware.countDocuments({
+      createdAt: {
+        $gte: startOfDay,
+      },
+    });
+
+    // Format as 3-digit sequence (001, 002, etc.)
+    const sequence = (countToday + 1).toString().padStart(3, "0");
+
+    // Create asset number: HW-20230615-001
+    const assetNumber = `HW-${dateStr}-${sequence}`;
+
     //   Upload Files to Backblaze
     const images = req.files?.images
       ? await uploadToBackblaze("images", req.files.images)
@@ -129,9 +150,10 @@ const addHardwareDetails = async (req, res) => {
       ? await uploadToBackblaze("manuals", req.files.manuals)
       : [];
 
-    //   Save Hardware Details to MongoDB
+    //   Save Hardware Details to MongoDB with the generated asset number
     const hardwareDetails = new Hardware({
       ...req.body,
+      assetNumber,
       images, // Save image URLs
       invoices, // Save invoice URLs
       manuals, // Save manual URLs
@@ -141,7 +163,7 @@ const addHardwareDetails = async (req, res) => {
 
     //  Generate QR Code Buffer
     const qrData = `
-    ID: ${updatedHardware.uniqueId}
+    ID: ${updatedHardware.assetNumber}
     NAME: ${req.body.assetName}
     TYPE: ${req.body.assetType}
     MODEL: ${req.body.modelNo}

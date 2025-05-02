@@ -1,10 +1,10 @@
-import installedSoftwares from "../models/InstallSoftware.js";
-import Softwares from "../models/Softwares.js";
 import { StatusCodes } from "http-status-codes";
 
 const submitInstalledSoftware = async (req, res) => {
   try {
     const { software, date, status, id } = req.body;
+    const InstallSoftware = req.models.InstallSoftware;
+    const AllSoftwares = req.models.AllSoftwares;
 
     //  Validate Required Fields
     if (!id) {
@@ -29,17 +29,14 @@ const submitInstalledSoftware = async (req, res) => {
     }
 
     //  Check for Already Installed Software
-    const alreadyInstalled = await installedSoftwares
-      .find({
-        hardwareId: id,
-        softwareId: { $in: software },
-      })
-      .populate({
-        path: "softwareId",
-        select: "name",
-      });
+    const alreadyInstalled = await InstallSoftware.find({
+      hardwareId: id,
+      softwareId: { $in: software },
+    }).populate({
+      path: "softwareId",
+      select: "name",
+    });
 
-   
     if (alreadyInstalled.length > 0) {
       const alreadyInstalledNames = alreadyInstalled
         .map((s) => s.softwareId.name)
@@ -51,7 +48,9 @@ const submitInstalledSoftware = async (req, res) => {
     }
 
     //  Validate Software IDs in Bulk
-    const validSoftwareData = await Softwares.find({ _id: { $in: software } });
+    const validSoftwareData = await AllSoftwares.find({
+      _id: { $in: software },
+    });
 
     const validSoftwareIds = validSoftwareData.map((s) => s._id.toString());
 
@@ -104,7 +103,7 @@ const submitInstalledSoftware = async (req, res) => {
     }
 
     //  Bulk Save Software Quantity Updates
-    await Softwares.bulkWrite(bulkUpdateOperations);
+    await AllSoftwares.bulkWrite(bulkUpdateOperations);
 
     //  Bulk Save Installed Software Records
     const installedRecords = validSoftwares.map(
@@ -116,7 +115,7 @@ const submitInstalledSoftware = async (req, res) => {
       })
     );
 
-    await installedSoftwares.insertMany(installedRecords);
+    await InstallSoftware.insertMany(installedRecords);
 
     res.status(StatusCodes.OK).json({
       success: true,
@@ -136,9 +135,9 @@ const submitInstalledSoftware = async (req, res) => {
 const fetchInstalledSoftwares = async (req, res) => {
   const { assetId } = req.query;
 
+  const InstallSoftware = req.models.InstallSoftware;
   try {
-    const assets = await installedSoftwares
-      .find({ hardwareId: assetId })
+    const assets = await InstallSoftware.find({ hardwareId: assetId })
       .populate({
         path: "softwareId",
         select: "name vendor licenseType",
@@ -165,10 +164,12 @@ const fetchInstalledSoftwares = async (req, res) => {
 
 const deleteSoftwareDetails = async (req, res) => {
   const { softwareId } = req.query;
+  const InstallSoftware = req.models.InstallSoftware;
+  const AllSoftwares = req.models.AllSoftwares;
 
   try {
     // Fetch the installed software record
-    const installedSoftware = await installedSoftwares.findById(softwareId);
+    const installedSoftware = await InstallSoftware.findById(softwareId);
     if (!installedSoftware) {
       return res.status(StatusCodes.NOT_FOUND).json({
         success: false,
@@ -177,7 +178,9 @@ const deleteSoftwareDetails = async (req, res) => {
     }
 
     // Update software quantity
-    const softwareData = await Softwares.findById(installedSoftware.softwareId);
+    const softwareData = await AllSoftwares.findById(
+      installedSoftware.softwareId
+    );
     if (softwareData) {
       softwareData.spares += 1;
       softwareData.assignedQuantity -= 1;
@@ -186,7 +189,7 @@ const deleteSoftwareDetails = async (req, res) => {
     }
 
     // Delete the installed software record
-    await installedSoftwares.deleteOne({ _id: softwareId });
+    await InstallSoftware.deleteOne({ _id: softwareId });
 
     res.status(StatusCodes.OK).json({
       success: true,

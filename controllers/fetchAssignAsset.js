@@ -5,7 +5,7 @@ import { StatusCodes } from "http-status-codes";
 
 const fetchAssignAsset = async (req, res) => {
   const { assetId } = req.query;
-
+  const AssignedAssetDetail = req.models.AssignedAsset;
   try {
     // Fetch all assets from the database
 

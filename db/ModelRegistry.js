@@ -70,6 +70,29 @@ class ModelRegistry {
   }
 
   /**
+   * Clear models for a specific client from the registry
+   * This is used when a connection is closed due to inactivity
+   * @param {string} clientId - The client identifier
+   */
+  clearClientModels(clientId) {
+    if (this.modelStore.has(clientId)) {
+      console.log(`Clearing models for client ${clientId} from registry`);
+      this.modelStore.delete(clientId);
+    }
+  }
+
+  /**
+   * Set models for a specific client in the registry
+   * This is used when a new connection is created
+   * @param {string} clientId - The client identifier
+   * @param {Object} models - The models to store
+   */
+  setModels(clientId, models) {
+    console.log(`Setting models for client ${clientId} in registry`);
+    this.modelStore.set(clientId, models);
+  }
+
+  /**
    * Get statistics about the registry
    * @returns {Object} Statistics object
    */

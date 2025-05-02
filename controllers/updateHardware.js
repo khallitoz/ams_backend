@@ -101,7 +101,7 @@ const validateForm = (data) => {
 
 const updateHardware = async (req, res) => {
   const { id } = req.params;
-
+  const Hardware = req.models.Hardware;
   // Parse nested JSON fields
   parseNestedJSON(req.body, [
     "computerDetails",

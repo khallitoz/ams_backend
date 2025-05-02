@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import bcryptjs from "bcryptjs";
+import modelRegistry from "./ModelRegistry.js";
 
 // Get the directory name
 const __filename = fileURLToPath(import.meta.url);
@@ -16,6 +17,8 @@ import InstallSoftwareSchema from "../models/schemas/InstallSoftwareSchema.js";
 import AssignedAssetSchema from "../models/schemas/AssignedAssetSchema.js";
 import CounterSchema from "../models/schemas/CounterSchema.js";
 import UserSchema from "../models/schemas/UserSchema.js";
+import MaintenanceSchema from "../models/schemas/MaintenanceSchema.js";
+import LocationSchema from "../models/schemas/LocationSchema.js";
 
 // Map to store active connections and their models
 const connections = new Map();
@@ -25,7 +28,7 @@ const CONNECTION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 /**
  * Creates all the models for a specific connection
  */
-const createModels = (connection) => {
+const createModels = async (connection) => {
   // Define models with their schemas
   const models = {
     Counter: connection.model("Counter", CounterSchema),
@@ -34,42 +37,9 @@ const createModels = (connection) => {
     InstallSoftware: connection.model("InstallSoftware", InstallSoftwareSchema),
     AssignedAsset: connection.model("AssignedAsset", AssignedAssetSchema),
     User: connection.model("User", UserSchema),
+    Maintenance: connection.model("Maintenance", MaintenanceSchema),
+    Location: connection.model("Location", LocationSchema),
   };
-
-  // Set up pre-save middleware for Hardware model to use the correct Counter model
-  models.Hardware.schema.pre("save", async function (next) {
-    if (this.isNew) {
-      try {
-        // Increment counter for Hardware model using the Counter model from the same connection
-        const counter = await models.Counter.findOneAndUpdate(
-          { modelName: "Hardware" },
-          { $inc: { count: 1 } },
-          { new: true, upsert: true }
-        );
-
-        if (!counter) {
-          throw new Error(
-            "Counter document not initialized. Run the initializer."
-          );
-        }
-
-        this.uniqueId = counter.count;
-        next();
-      } catch (error) {
-        console.error("Error generating unique ID:", error.message);
-        next(error);
-      }
-    } else {
-      next();
-    }
-  });
-
-  // Set up pre-save middleware for User model
-  models.User.schema.pre("save", async function () {
-    if (!this.isModified("password") || this.googleUserId) return;
-    const salt = await bcryptjs.genSalt(10);
-    this.password = await bcryptjs.hash(this.password, salt);
-  });
 
   return models;
 };
@@ -128,7 +98,7 @@ const connectDb = async (url, client_id = null) => {
     const connection = mongoose.createConnection(connectionString);
 
     // Create models for this connection
-    const models = createModels(connection);
+    const models = await createModels(connection);
 
     // Set a timeout to close the connection if it becomes inactive
     const timeoutId = setTimeout(() => {
@@ -165,6 +135,59 @@ const closeConnection = async (connectionKey) => {
       // Clear the timeout
       clearTimeout(connectionData.timeoutId);
 
+      // Log the model cache before deletion
+      if (connectionData.models) {
+        console.log(
+          `Model cache before deletion for connection ${connectionKey}:`
+        );
+        Object.values(connectionData.models).forEach((model) => {
+          if (
+            model.collection &&
+            model.collection.conn &&
+            model.collection.conn.models
+          ) {
+            console.log(
+              `- Model: ${model.modelName}, Cache keys: ${Object.keys(
+                model.collection.conn.models
+              ).join(", ")}`
+            );
+          }
+        });
+
+        // Clear the model cache for this specific connection only
+        Object.values(connectionData.models).forEach((model) => {
+          // Clear only this model from this connection's cache
+          if (
+            model.collection &&
+            model.collection.conn &&
+            model.collection.conn.models
+          ) {
+            delete model.collection.conn.models[model.modelName];
+          }
+        });
+
+        // Log the model cache after deletion
+        console.log(
+          `Model cache after deletion for connection ${connectionKey}:`
+        );
+        Object.values(connectionData.models).forEach((model) => {
+          if (
+            model.collection &&
+            model.collection.conn &&
+            model.collection.conn.models
+          ) {
+            console.log(
+              `- Model: ${model.modelName}, Cache keys: ${Object.keys(
+                model.collection.conn.models
+              ).join(", ")}`
+            );
+          }
+        });
+      }
+
+      // Clear models from the registry
+      modelRegistry.clearClientModels(connectionKey);
+
       // Close the connection
       await connectionData.connection.close();
       console.log(`Closed inactive connection to database: ${connectionKey}`);
@@ -173,6 +196,7 @@ const closeConnection = async (connectionKey) => {
     } finally {
       // Remove the connection from the map
       connections.delete(connectionKey);
+      console.log(`Removed connection from map: ${connectionKey}`);
     }
   }
 };
@@ -197,6 +221,15 @@ export const closeAllConnections = async () => {
 
   // Clear the connections map
   connections.clear();
+};
+
+// Export the getConnections function
+export const getConnections = () => {
+  return Array.from(connections.entries()).map(([key, value]) => ({
+    key,
+    connectionState: value.connection.readyState,
+    lastUsed: value.lastUsed,
+  }));
 };
 
 // Export the default connectDb function

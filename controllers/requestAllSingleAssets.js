@@ -5,11 +5,10 @@ import installedSoftwares from "../models/InstallSoftware.js";
 
 const requestAllSingleAssets = async (req, res) => {
   const { assetId } = req.query;
-  const Hardware = req.models.Hardware;
 
   try {
     // Fetch all assets from the database
-
+    const Hardware = req.models.Hardware;
     const assets = await Hardware.findOne({ _id: assetId });
 
     // Respond with the assets
@@ -31,8 +30,8 @@ const requestSoftwareAssetDetails = async (req, res) => {
 
   try {
     // Fetch all assets from the database
-
-    const assets = await Softwares.findOne({ _id: assetId });
+    const AllSoftwares = req.models.AllSoftwares;
+    const assets = await AllSoftwares.findOne({ _id: assetId });
 
     // Respond with the assets
     res.status(StatusCodes.OK).json({
@@ -49,10 +48,9 @@ const requestSoftwareAssetDetails = async (req, res) => {
 };
 const fetchAssociatedHardwares = async (req, res) => {
   const { assetId } = req.query;
-
+  const InstallSoftware = req.models.InstallSoftware;
   try {
-    const assets = await installedSoftwares
-      .find({ softwareId: assetId })
+    const assets = await InstallSoftware.find({ softwareId: assetId })
       .populate({
         path: "softwareId",
         select: "name vendor licenseType price date",
@@ -60,7 +58,7 @@ const fetchAssociatedHardwares = async (req, res) => {
       .populate({
         path: "hardwareId",
         select:
-          "assetName category condition assignedTo location building room department uniqueId",
+          "assetName category condition assignedTo location building room department uniqueId assetNumber",
       })
       .select("_id license date status");
 
