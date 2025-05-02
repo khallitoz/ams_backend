@@ -4,6 +4,7 @@ import { Box, Typography } from "@mui/material";
 
 import Sidebar from "@/components/Sidebar";
 import TabBar from "@/components/TabBar";
+import Layout from "@/components/Layout";
 
 const dashboardStyles = {
   container: {
@@ -61,17 +62,13 @@ const dashboardStyles = {
 
 const AllAssets: React.FC = () => {
   return (
-    <Box sx={dashboardStyles.container}>
-      <Sidebar />
+    <Layout>
+      <Typography sx={{ fontSize: "25px" }}>All Hardware Assets</Typography>
 
-      <Box sx={dashboardStyles.content}>
-        <Typography sx={{ fontSize: "25px" }}>All Hardware Assets</Typography>
-
-        <Box>
-          <TabBar />
-        </Box>
+      <Box>
+        <TabBar />
       </Box>
-    </Box>
+    </Layout>
   );
 };
 

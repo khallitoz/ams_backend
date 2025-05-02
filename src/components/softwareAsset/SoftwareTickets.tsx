@@ -14,7 +14,7 @@ import {
   TextField,
   TablePagination,
 } from "@mui/material";
-import InputAdornment from "@mui/material/InputAdornment";
+import InputAdornment from '@mui/material/InputAdornment/index.js';
 import { useAppContext } from "../../context/AppContext";
 import Sidebar from "@/components/Sidebar";
 

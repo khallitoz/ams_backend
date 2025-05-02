@@ -82,7 +82,7 @@ const Status: React.FC = () => {
   const { singleStateData, submitAssignedAsset, fetchAssignedDetails } =
     useAppContext();
   const [assignedDetails, setassignedDetails] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Modal State
   const [open, setOpen] = useState(false);
@@ -146,6 +146,7 @@ const Status: React.FC = () => {
     const isSuccess = await submitAssignedAsset(submissionData);
     if (isSuccess) {
       setErrors({}); // Clear errors after successful submission
+      fetchassignedlist();
       handleClose();
       setFormData(initialState);
     }
@@ -157,17 +158,16 @@ const Status: React.FC = () => {
       return;
     }
 
-    setIsLoading(true); // Start loader
+    // Start loader
 
     const data = await fetchAssignedDetails(singleStateData._id);
 
     if (data) {
       setassignedDetails(data); // Update state with valid data
+      setIsLoading(false);
     } else {
       setassignedDetails(null); // Reset or clear state on failure
     }
-
-    setIsLoading(false); // Stop loader
   };
 
   // useEffect with proper dependency

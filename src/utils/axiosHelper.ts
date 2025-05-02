@@ -44,14 +44,13 @@ belzirAxios.interceptors.response.use(
 
       try {
         const refreshResponse = await axios.get(
-          `http://localhost:4000/api/users/token/refresh`,
+          `http://localhost:4000/auth/api/users/token/refresh`,
           {
             withCredentials: true,
           }
         );
 
         if (refreshResponse?.data?.valid) {
-          console.log("I refreshed ooo");
           onRefreshed();
           return belzirAxios(originalRequest);
         } else {

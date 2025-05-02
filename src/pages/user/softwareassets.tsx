@@ -13,13 +13,15 @@ import {
   Paper,
   TextField,
   TablePagination,
+  InputAdornment,
 } from "@mui/material";
-import InputAdornment from "@mui/material/InputAdornment";
+
 import { useAppContext } from "../../context/AppContext";
 import Sidebar from "@/components/Sidebar";
 
 import SearchIcon from "@mui/icons-material/Search";
 import { useDebounce } from "@/utils/useDebounce";
+import Layout from "@/components/Layout";
 
 const dashboardStyles = {
   container: {
@@ -131,10 +133,8 @@ const AllAssets: React.FC = () => {
   }, [page, rowsPerPage, debouncedSearchQuery]);
 
   return (
-    <Box sx={dashboardStyles.container}>
-      <Sidebar />
-
-      <Box sx={dashboardStyles.content}>
+    <Layout>
+      <Box>
         <Typography sx={{ fontSize: "25px" }}>All Software Assets</Typography>
         {loading ? (
           <CircularProgress />
@@ -220,7 +220,7 @@ const AllAssets: React.FC = () => {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Box>
-    </Box>
+    </Layout>
   );
 };
 

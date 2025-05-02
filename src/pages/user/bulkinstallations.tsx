@@ -13,6 +13,7 @@ import {
 import assetTypes from "@/utils/assetTypes";
 import Sidebar from "@/components/Sidebar";
 import { useAppContext } from "../../context/AppContext";
+import Layout from "@/components/Layout";
 
 const assetSoftwareDesign = {
   marginTop: "5px",
@@ -123,28 +124,13 @@ const BulkInstallation: React.FC = () => {
     fetchSoftwareCategories();
   }, [softwareCategories]);
 
-  if (isLoading) {
-    return (
-      <CircularProgress
-        sx={{
-          position: "fixed",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-        }}
-      />
-    );
-  }
-
   return (
-    <Box sx={dashboardDesign}>
-      <Sidebar />
-
+    <Layout>
       <Box
         sx={{
           width: "100%",
-          marginLeft: "18%",
           display: "flex",
+          left: 0,
           flexDirection: "column",
           backgroundColor: "white",
           marginTop: "12px",
@@ -154,7 +140,22 @@ const BulkInstallation: React.FC = () => {
           marginBottom: "2px",
         }}
       >
-        <Typography sx={{ fontSize: "25px", marginTop: "40px" }}></Typography>
+        {isLoading && (
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              padding: "20px",
+              position: "fixed",
+              top: "64px", // Position below the navbar
+              left: 0,
+              zIndex: 1100, // Higher than navbar to ensure visibility
+            }}
+          >
+            <CircularProgress sx={{ color: "#5a5588" }} />
+          </Box>
+        )}
 
         <Box
           sx={{
@@ -285,7 +286,7 @@ const BulkInstallation: React.FC = () => {
           </Box>
         </Box>
       </Box>
-    </Box>
+    </Layout>
   );
 };
 

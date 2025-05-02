@@ -14,6 +14,7 @@ import Sidebar from "@/components/Sidebar";
 import HomeIcon from "@mui/icons-material/Home";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import SoftwareTabBar from "@/components/SoftwareTabBar";
+import Layout from "@/components/Layout";
 
 const dashboardStyles = {
   container: {
@@ -86,7 +87,7 @@ const SoftwareAssetDetails: React.FC = () => {
         pauseOnHover: true,
         draggable: true,
       });
-      router.replace("/user/allassets"); // Redirect to All Assets
+      // router.replace("/user/allassets"); // Redirect to All Assets
       return;
     }
 
@@ -143,9 +144,8 @@ const SoftwareAssetDetails: React.FC = () => {
   }
 
   return (
-    <Box sx={dashboardStyles.container}>
-      <Sidebar />
-      <Box sx={dashboardStyles.content}>
+    <Layout>
+      <Box>
         {/* Breadcrumbs */}
         <Breadcrumbs
           aria-label="breadcrumb"
@@ -175,7 +175,7 @@ const SoftwareAssetDetails: React.FC = () => {
         <SoftwareTabBar />
         <Divider />
       </Box>
-    </Box>
+    </Layout>
   );
 };
 

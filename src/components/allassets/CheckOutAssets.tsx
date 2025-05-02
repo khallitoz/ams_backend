@@ -14,8 +14,8 @@ import {
   TextField,
   TablePagination,
   Button,
+  InputAdornment
 } from "@mui/material";
-import InputAdornment from "@mui/material/InputAdornment";
 import { useAppContext } from "../../context/AppContext";
 import Sidebar from "@/components/Sidebar";
 import TabBar from "@/components/TabBar";
@@ -171,6 +171,7 @@ const CheckOutAssets: React.FC = () => {
               <Table>
                 <TableHead>
                   <TableRow>
+                    <TableCell>#</TableCell>
                     <TableCell>Asset Number</TableCell>
                     <TableCell>Asset Name</TableCell>
                     <TableCell>Asset Type</TableCell>
@@ -180,7 +181,7 @@ const CheckOutAssets: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {assetData.map((asset) => (
+                  {assetData.map((asset, index) => (
                     <Link
                       href={`/user/singleassetdetails/${asset._id}`}
                       key={asset._id}
@@ -188,7 +189,7 @@ const CheckOutAssets: React.FC = () => {
                       legacyBehavior
                     >
                       <TableRow hover component="a">
-                        <TableCell>{asset.uniqueId}</TableCell>
+                        <TableCell>{asset.assetNumber}</TableCell>
                         <TableCell>{asset.assetName}</TableCell>
                         <TableCell>{asset.assetType}</TableCell>
                         <TableCell>{asset.category || "N/A"}</TableCell>

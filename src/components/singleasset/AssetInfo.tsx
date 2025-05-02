@@ -132,7 +132,7 @@ const AssetInfo: React.FC = () => {
                   <TableCell>
                     <b>Asset Number</b>
                   </TableCell>
-                  <TableCell>{singleStateData.uniqueId || "N/A"}</TableCell>
+                  <TableCell>{singleStateData.assetNumber || "N/A"}</TableCell>
                 </TableRow>
                 <TableRow sx={tableDesign.tableRow}>
                   <TableCell>

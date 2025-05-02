@@ -14,6 +14,7 @@ import Sidebar from "@/components/Sidebar";
 import AssetTabBar from "@/components/AssetTabBar";
 import HomeIcon from "@mui/icons-material/Home";
 import InventoryIcon from "@mui/icons-material/Inventory";
+import Layout from "@/components/Layout";
 
 const dashboardStyles = {
   container: {
@@ -86,7 +87,7 @@ const SingleAssetDetails: React.FC = () => {
         pauseOnHover: true,
         draggable: true,
       });
-      router.replace("/user/allassets"); // Redirect to All Assets
+      // router.replace("/user/allassets"); // Redirect to All Assets
       return;
     }
 
@@ -143,36 +144,33 @@ const SingleAssetDetails: React.FC = () => {
   }
 
   return (
-    <Box sx={dashboardStyles.container}>
-      <Sidebar />
-      <Box sx={dashboardStyles.content}>
-        {/* Breadcrumbs */}
-        <Breadcrumbs
-          aria-label="breadcrumb"
-          separator={<span style={breadcrumbStyles.separator}>/</span>}
+    <Layout>
+      {/* Breadcrumbs */}
+      <Breadcrumbs
+        aria-label="breadcrumb"
+        separator={<span style={breadcrumbStyles.separator}>/</span>}
+      >
+        <Link href="/" style={breadcrumbStyles.breadcrumbItem}>
+          <HomeIcon sx={{ marginRight: "4px", fontSize: "16px" }} />
+          Home
+        </Link>
+        <Link href="/user/allassets" style={breadcrumbStyles.breadcrumbItem}>
+          <InventoryIcon sx={{ marginRight: "4px", fontSize: "16px" }} />
+          All Assets
+        </Link>
+        <Typography
+          style={{
+            ...breadcrumbStyles.breadcrumbItem,
+            ...breadcrumbStyles.activeItem,
+          }}
         >
-          <Link href="/" style={breadcrumbStyles.breadcrumbItem}>
-            <HomeIcon sx={{ marginRight: "4px", fontSize: "16px" }} />
-            Home
-          </Link>
-          <Link href="/user/allassets" style={breadcrumbStyles.breadcrumbItem}>
-            <InventoryIcon sx={{ marginRight: "4px", fontSize: "16px" }} />
-            All Assets
-          </Link>
-          <Typography
-            style={{
-              ...breadcrumbStyles.breadcrumbItem,
-              ...breadcrumbStyles.activeItem,
-            }}
-          >
-            Asset Number {singleStateData?.uniqueId || "N/A"}
-          </Typography>
-        </Breadcrumbs>
+          Asset Number {singleStateData?.assetNumber || "N/A"}
+        </Typography>
+      </Breadcrumbs>
 
-        <AssetTabBar />
-        <Divider />
-      </Box>
-    </Box>
+      <AssetTabBar />
+      <Divider />
+    </Layout>
   );
 };
 

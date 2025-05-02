@@ -19,7 +19,7 @@ const FormSection = ({ title, children }) => (
         position: "absolute",
         top: "-10px",
         left: "10px",
-        background: "#483D8B",
+        background: "#504083",
         color: "white",
         zIndex: 1,
         padding: "0 5px",

@@ -67,18 +67,18 @@ interface DashboardData {
 const SimplePieChart: React.FC<PieChartProps> = ({
   data,
   colors,
-  width = 250,
-  height = 250,
+  width = 300,
+  height = 280,
   title,
 }) => {
   const theme = useTheme();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const chartWidth = width * 0.5; // Allocate 50% for chart (reduced from 60%)
-  const legendWidth = width * 0.5; // Allocate 50% for legend (increased from 40%)
-  const radius = (Math.min(chartWidth, height) / 2) * 0.9; // Slightly larger to fill the space
+  const chartWidth = width * 0.5; // Keep the 50/50 ratio
+  const legendWidth = width * 0.5; // Keep the 50/50 ratio
+  const radius = (Math.min(chartWidth, height) / 2) * 0.98; // Maintain high radius ratio
   const centerX = chartWidth / 2;
   const centerY = height / 2;
-  const donutHoleRadius = radius * 0.5; // Create a donut hole for better aesthetics
+  const donutHoleRadius = radius * 0.45; // Slightly smaller hole for more pie area
 
   // Handle empty data
   if (!data || data.length === 0) {
@@ -131,7 +131,7 @@ const SimplePieChart: React.FC<PieChartProps> = ({
               textAnchor="middle"
               dominantBaseline="middle"
               fill={theme.palette.text.primary}
-              fontSize="18px"
+              fontSize="20px"
               fontWeight="bold"
             >
               100%
@@ -139,21 +139,21 @@ const SimplePieChart: React.FC<PieChartProps> = ({
           </svg>
         </Box>
 
-        {/* Legend - positioned to the right with reduced padding */}
+        {/* Legend - positioned to the right with minimal padding */}
         <Box
           sx={{
             width: legendWidth,
             maxHeight: height,
             overflowY: "auto",
-            pl: 1, // Reduced from pl: 2
+            pl: 0.5,
           }}
         >
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
-              mb: 1,
-              p: 0.5, // Reduced from p: 1
+              mb: 0.5,
+              p: 0.75,
               borderRadius: 1,
               transition: "all 0.3s ease",
               backgroundColor: alpha(colors[0], 0.1),
@@ -165,12 +165,18 @@ const SimplePieChart: React.FC<PieChartProps> = ({
                 height: 12,
                 backgroundColor: colors[0],
                 mr: 1,
+                flexShrink: 0,
                 borderRadius: "50%",
               }}
             />
             <Typography
               variant="body2"
-              sx={{ mr: 1, fontWeight: 500, flex: 1 }}
+              sx={{
+                fontWeight: 500,
+                mr: 0.75,
+                flexShrink: 0,
+                fontSize: "0.85rem",
+              }}
             >
               {data[0].name}
             </Typography>
@@ -178,8 +184,12 @@ const SimplePieChart: React.FC<PieChartProps> = ({
               variant="body2"
               color="text.secondary"
               fontWeight="bold"
+              sx={{
+                fontSize: "0.85rem",
+                flexShrink: 0,
+              }}
             >
-              {data[0].value}
+              {data[0].value} (100%)
             </Typography>
           </Box>
         </Box>
@@ -248,7 +258,7 @@ const SimplePieChart: React.FC<PieChartProps> = ({
             {slices.map((slice, index) => {
               const isHovered = hoveredIndex === index;
               // Calculate offset for hover effect
-              const hoverOffset = isHovered ? 7 : 0;
+              const hoverOffset = isHovered ? 8 : 0;
               const midAngle = (slice.startAngle + slice.endAngle) / 2;
               const midRad = (midAngle - 90) * (Math.PI / 180);
               const offsetX = hoverOffset * Math.cos(midRad);
@@ -310,13 +320,13 @@ const SimplePieChart: React.FC<PieChartProps> = ({
         </svg>
       </Box>
 
-      {/* Legend - positioned to the right with reduced padding */}
+      {/* Legend - positioned to the right with minimal padding */}
       <Box
         sx={{
           width: legendWidth,
           maxHeight: height,
           overflowY: "auto",
-          pl: 1, // Reduced from pl: 2
+          pl: 0.5,
         }}
       >
         {slices.map((slice, index) => (
@@ -331,9 +341,10 @@ const SimplePieChart: React.FC<PieChartProps> = ({
             <Box
               sx={{
                 display: "flex",
+                flexWrap: "nowrap",
                 alignItems: "center",
-                mb: 0.5, // Reduced from mb: 1
-                p: 0.5, // Reduced from p: 1
+                mb: 0.5,
+                p: 0.5,
                 borderRadius: 1,
                 transition: "all 0.3s ease",
                 backgroundColor:
@@ -351,10 +362,11 @@ const SimplePieChart: React.FC<PieChartProps> = ({
             >
               <Box
                 sx={{
-                  width: 10, // Reduced from width: 12
-                  height: 10, // Reduced from height: 12
+                  width: 8,
+                  height: 8,
                   backgroundColor: slice.color,
-                  mr: 1,
+                  mr: 0.5,
+                  flexShrink: 0,
                   borderRadius: "50%",
                   boxShadow:
                     hoveredIndex === index
@@ -365,13 +377,13 @@ const SimplePieChart: React.FC<PieChartProps> = ({
               <Typography
                 variant="body2"
                 sx={{
-                  mr: 1,
+                  mr: 0.5,
                   fontWeight: hoveredIndex === index ? 600 : 500,
-                  flex: 1,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  fontSize: "0.8rem", // Added smaller font size
+                  fontSize: "0.8rem",
+                  flexShrink: 0,
+                  whiteSpace: "normal",
+                  wordBreak: "break-word",
+                  lineHeight: 1.2,
                 }}
               >
                 {slice.name}
@@ -380,9 +392,13 @@ const SimplePieChart: React.FC<PieChartProps> = ({
                 variant="body2"
                 color="text.secondary"
                 fontWeight={hoveredIndex === index ? "bold" : "normal"}
-                sx={{ fontSize: "0.8rem" }} // Added smaller font size
+                sx={{
+                  fontSize: "0.8rem",
+                  flexShrink: 0,
+                  lineHeight: 1.2,
+                }}
               >
-                {slice.value}
+                {slice.value} ({(slice.percentage * 100).toFixed(0)}%)
               </Typography>
             </Box>
           </Tooltip>
@@ -534,31 +550,31 @@ const Dashboard: React.FC = () => {
 
       // Use real data if available, otherwise use mock data
       setDashboardData({
-        totalAssets: countersResponse?.data?.totalAssets || 56,
-        totalHardwareAssets: countersResponse?.data?.totalHardwareAssets || 38,
-        totalSoftwareAssets: countersResponse?.data?.totalSoftwareAssets || 18,
+        totalAssets: countersResponse?.data?.totalAssets || 0,
+        totalHardwareAssets: countersResponse?.data?.totalHardwareAssets || 0,
+        totalSoftwareAssets: countersResponse?.data?.totalSoftwareAssets || 0,
         hardwareByType: hardwareTypeResponse?.data?.data || [
-          { name: "Computer", value: 25 },
-          { name: "Printer", value: 10 },
-          { name: "Audio Visual", value: 12 },
-          { name: "Telephone", value: 11 },
-          { name: "Network Device", value: 1 },
-          { name: "Furniture", value: 3 },
-          { name: "Vehicle", value: 3 },
-          { name: "Equipment", value: 10 },
+          { name: "Computer", value: 0 },
+          { name: "Printer", value: 0 },
+          { name: "Audio Visual", value: 0 },
+          { name: "Telephone", value: 0 },
+          { name: "Network Device", value: 0 },
+          { name: "Furniture", value: 0 },
+          { name: "Vehicle", value: 0 },
+          { name: "Equipment", value: 0 },
         ],
         hardwareByStatus: hardwareStatusResponse?.data?.data || [
-          { name: "In Service", value: 56 },
-          { name: "Inactive", value: 17 },
-          { name: "Check In", value: 5 },
-          { name: "Check Out", value: 1 },
+          { name: "In Service", value: 0 },
+          { name: "Inactive", value: 0 },
+          { name: "Check In", value: 0 },
+          { name: "Check Out", value: 0 },
         ],
         softwareByCategory: softwareCategoryResponse?.data?.data || [
-          { name: "Operating System", value: 5 },
-          { name: "Database", value: 3 },
-          { name: "Security", value: 2 },
-          { name: "Office Suite", value: 4 },
-          { name: "Development Tools", value: 4 },
+          { name: "Operating System", value: 0 },
+          { name: "Database", value: 0 },
+          { name: "Security", value: 0 },
+          { name: "Office Suite", value: 0 },
+          { name: "Development Tools", value: 0 },
         ],
       });
     } catch (error) {
@@ -606,7 +622,7 @@ const Dashboard: React.FC = () => {
     <Layout>
       <Box
         className="dashboard-container"
-        sx={{ p: 3 }}
+        sx={{ p: 2 }}
         id="dashboardPrintArea"
       >
         <Box
@@ -614,7 +630,7 @@ const Dashboard: React.FC = () => {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            mb: 3,
+            mb: 2,
           }}
         >
           <Typography variant="h4" component="h1" gutterBottom>
@@ -655,7 +671,7 @@ const Dashboard: React.FC = () => {
         ) : (
           <>
             {/* Counter Cards */}
-            <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid container spacing={2} sx={{ mb: 2 }}>
               <Grid item xs={12} md={4}>
                 <CounterCard
                   title="All Assets"
@@ -692,8 +708,9 @@ const Dashboard: React.FC = () => {
                 <Paper
                   elevation={3}
                   sx={{
-                    p: 3,
+                    p: 1.5,
                     height: "100%",
+                    minHeight: "340px",
                     display: "flex",
                     flexDirection: "column",
                     borderRadius: 2,
@@ -710,8 +727,8 @@ const Dashboard: React.FC = () => {
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      mb: 2,
-                      pb: 1.5,
+                      mb: 0.75,
+                      pb: 0.75,
                       borderBottom: `1px solid ${alpha(
                         theme.palette.divider,
                         0.1
@@ -723,9 +740,10 @@ const Dashboard: React.FC = () => {
                       sx={{
                         fontWeight: "bold",
                         color: theme.palette.primary.main,
+                        fontSize: "1rem",
                       }}
                     >
-                      Hardware Assets by Type
+                      Hardware Assets by Category
                     </Typography>
                     <Button
                       variant="text"
@@ -742,13 +760,13 @@ const Dashboard: React.FC = () => {
                       justifyContent: "center",
                       alignItems: "center",
                       flexGrow: 1,
-                      pt: 2,
+                      pt: 0.75,
                     }}
                   >
                     <SimplePieChart
                       data={dashboardData.hardwareByType}
                       colors={assetTypeColors}
-                      title="Hardware by Type"
+                      title="Hardware by Category"
                     />
                   </Box>
                 </Paper>
@@ -759,8 +777,9 @@ const Dashboard: React.FC = () => {
                 <Paper
                   elevation={3}
                   sx={{
-                    p: 3,
+                    p: 1.5,
                     height: "100%",
+                    minHeight: "340px",
                     display: "flex",
                     flexDirection: "column",
                     borderRadius: 2,
@@ -777,8 +796,8 @@ const Dashboard: React.FC = () => {
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      mb: 2,
-                      pb: 1.5,
+                      mb: 0.75,
+                      pb: 0.75,
                       borderBottom: `1px solid ${alpha(
                         theme.palette.divider,
                         0.1
@@ -790,6 +809,7 @@ const Dashboard: React.FC = () => {
                       sx={{
                         fontWeight: "bold",
                         color: theme.palette.primary.main,
+                        fontSize: "1rem",
                       }}
                     >
                       Hardware Assets by Status
@@ -809,7 +829,7 @@ const Dashboard: React.FC = () => {
                       justifyContent: "center",
                       alignItems: "center",
                       flexGrow: 1,
-                      pt: 2,
+                      pt: 0.75,
                     }}
                   >
                     <SimplePieChart
@@ -826,8 +846,9 @@ const Dashboard: React.FC = () => {
                 <Paper
                   elevation={3}
                   sx={{
-                    p: 3,
+                    p: 1.5,
                     height: "100%",
+                    minHeight: "340px",
                     display: "flex",
                     flexDirection: "column",
                     borderRadius: 2,
@@ -844,8 +865,8 @@ const Dashboard: React.FC = () => {
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      mb: 2,
-                      pb: 1.5,
+                      mb: 0.75,
+                      pb: 0.75,
                       borderBottom: `1px solid ${alpha(
                         theme.palette.divider,
                         0.1
@@ -857,6 +878,7 @@ const Dashboard: React.FC = () => {
                       sx={{
                         fontWeight: "bold",
                         color: theme.palette.primary.main,
+                        fontSize: "1rem",
                       }}
                     >
                       Software Assets by Category
@@ -876,7 +898,7 @@ const Dashboard: React.FC = () => {
                       justifyContent: "center",
                       alignItems: "center",
                       flexGrow: 1,
-                      pt: 2,
+                      pt: 0.75,
                     }}
                   >
                     <SimplePieChart

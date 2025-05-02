@@ -1,2 +1,2 @@
-const assetForms = ["Hardware", "Software", "Hardware Installed Software"];
+const assetForms = ["Hardware", "Software"];
 export default assetForms;

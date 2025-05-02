@@ -9,7 +9,11 @@ import jwt_decode from "jwt-decode";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { AppReducer } from "./AppReducer";
-import { belzirAxiosGet, belzirAxiosPost } from "../utils/axiosHelper";
+import {
+  belzirAxiosGet,
+  belzirAxiosPost,
+  belzirAxiosPut,
+} from "../utils/axiosHelper";
 // Make sure this is typed if necessary
 import {
   UPDATE_SINGLE_DETAILS_STATE,
@@ -46,8 +50,6 @@ interface AppContextType extends StateType {
     picture: string,
     role: string[]
   ) => void;
-  handleGoogleLogin: (googleData: any) => Promise<void>;
-  logUserOff: () => Promise<void>;
   addHardwareDetails: (formData: FormData) => Promise<boolean>;
   addSofwareDetails: (values: {}) => Promise<boolean>;
   addBulkMaintenance: (values: {}) => Promise<boolean>;
@@ -110,6 +112,16 @@ interface AppContextType extends StateType {
     selectedSoftware: string[],
     selectedHardware: string[]
   ) => Promise<any>;
+
+  fetchAllMaintenance: (
+    page: number,
+    limit: number,
+    searchQuery: string
+  ) => Promise<any>;
+  updateMaintenanceStatus: (
+    id: string,
+    data: { status: string; comment: string }
+  ) => Promise<any>;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -133,90 +145,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     return cookies.token || cookies.accessToken;
   };
 
-  useEffect(() => {
-    // Get token from cookies instead of localStorage
-    const cookieToken = getTokenFromCookies();
-    if (cookieToken) {
-      setToken(cookieToken);
-    }
-  }, []);
-
-  const addUserToLocalStorage = (
-    token: string,
-    id: string,
-    email: string,
-    picture: string,
-    role: string[]
-  ) => {
-    try {
-      // Update to use cookies instead of localStorage
-      document.cookie = `token=${token}; path=/; max-age=86400`;
-    } catch (error) {
-      console.error("Error storing user data in cookies:", error);
-    }
-  };
-
-  const handleGoogleLogin = async (googleData: any) => {
-    try {
-      const { credential } = googleData;
-      const { data } = await axios.post(
-        "https://timetrackerserver-by8t.onrender.com/api/v1/auth/login",
-        googleData
-      );
-      const { token, user } = data;
-      const { id, email, picture, role } = user;
-
-      addUserToLocalStorage(token, id, email, picture, role);
-
-      if (role[0] === "user") {
-        router.push("/user/dashboard");
-      } else {
-        router.push("/admin/dashboard");
-      }
-    } catch (error) {
-      console.error("Google Login Error:", error);
-    }
-  };
-
-  const logUserOff = async () => {
-    const id = localStorage.getItem("id");
-    const email = localStorage.getItem("email");
-
-    const userDetails = {
-      email: email!,
-      id: id!,
-    };
-
-    const isloggedOut = await axios.post(
-      "https://timetrackerserver-by8t.onrender.com/api/v1/auth/logout",
-      userDetails
-    );
-
-    if (isloggedOut) {
-      // Clear cookies instead of localStorage
-      document.cookie = "token=; path=/; max-age=0";
-      document.cookie = "accessToken=; path=/; max-age=0";
-      localStorage.clear(); // Keep this to clear any other localStorage items
-      setToken(null);
-      router.push("/");
-    }
-  };
-
   const addHardwareDetails = async (formData: FormData): Promise<boolean> => {
-    const token = getTokenFromCookies();
-    console.log("FormData being sent:", formData);
-
     try {
-      const response = await axios.post(
+      const response = await belzirAxiosPost(
         "http://localhost:4002/api/v1/amsservices/addhardware",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-          withCredentials: true,
-        }
+        formData
       );
 
       if (response.data.success) {
@@ -303,20 +236,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     selectedSoftwares: string[],
     selectedHardwares: string[]
   ): Promise<any> => {
-    const token = getTokenFromCookies();
-
     try {
-      const response = await axios.post(
+      const response = await belzirAxiosPost(
         "http://localhost:4002/api/v1/amsservices/installselectedcategories",
         {
           softwareIds: selectedSoftwares,
           hardwareIds: selectedHardwares,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
         }
       );
 
@@ -489,17 +414,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
   const addBulkMaintenance = async (values: {}): Promise<boolean> => {
-    const token = getTokenFromCookies();
-
     try {
-      const response = await axios.post(
+      const response = await belzirAxiosPost(
         "http://localhost:4002/api/v1/amsservices/addbulkmaintenance",
-        values,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        values
       );
 
       if (response.data.success) {
@@ -586,17 +504,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     id: string,
     formData: FormData
   ): Promise<any> => {
-    const token = getTokenFromCookies();
     try {
-      const response = await axios.put(
+      const response = await belzirAxiosPut(
         `http://localhost:4002/api/v1/amsservices/updatehardware/${id}`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
+        formData
       );
 
       if (response.data.success) {
@@ -765,8 +676,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     limit = 10,
     searchQuery = ""
   ): Promise<any> => {
-    const token = getTokenFromCookies();
-
     try {
       const response = await belzirAxiosGet(
         `http://localhost:4002/api/v1/amsservices/requestsoftwareassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`
@@ -792,17 +701,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     limit = 10,
     searchQuery = ""
   ): Promise<any> => {
-    const token = getTokenFromCookies();
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
     try {
-      const response = await axios.get(
-        `http://localhost:4002/api/v1/amsservices/requestcheckinassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`,
-        config
+      const response = await belzirAxiosGet(
+        `http://localhost:4002/api/v1/amsservices/requestcheckinassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`
       );
 
       return response.data;
@@ -825,17 +726,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     limit = 10,
     searchQuery = ""
   ): Promise<any> => {
-    const token = getTokenFromCookies();
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
     try {
-      const response = await axios.get(
-        `http://localhost:4002/api/v1/amsservices/requestcheckoutassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`,
-        config
+      const response = await belzirAxiosGet(
+        `http://localhost:4002/api/v1/amsservices/requestcheckoutassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`
       );
 
       return response.data;
@@ -857,17 +750,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     limit = 10,
     searchQuery = ""
   ): Promise<any> => {
-    const token = getTokenFromCookies();
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
     try {
-      const response = await axios.get(
-        `http://localhost:4002/api/v1/amsservices/requestinactiveassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`,
-        config
+      const response = await belzirAxiosGet(
+        `http://localhost:4002/api/v1/amsservices/requestinactiveassets?page=${page}&limit=${limit}&searchQuery=${searchQuery}`
       );
 
       return response.data;
@@ -885,17 +770,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
   const getTabBarCounter = async (): Promise<any> => {
-    const token = getTokenFromCookies();
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      withCredentials: true,
-    };
     try {
-      const response = await axios.get(
-        `http://localhost:4002/api/v1/amsservices/tabbarcounter`,
-        config
+      const response = await belzirAxiosGet(
+        `http://localhost:4002/api/v1/amsservices/tabbarcounter`
       );
 
       return response.data;
@@ -915,23 +792,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const getSingleAssetDetail = async (
     assetId: string
   ): Promise<{ success: boolean; data?: any; error?: string }> => {
-    const token = getTokenFromCookies();
-
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      withCredentials: true,
-    };
-
     if (!assetId || typeof assetId !== "string" || !assetId.trim()) {
       return { success: false, error: "Invalid asset ID provided." };
     }
 
     try {
-      const response = await axios.get(
-        `http://localhost:4002/api/v1/amsservices/requestsingleasset?assetId=${assetId}`,
-        config
+      const response = await belzirAxiosGet(
+        `http://localhost:4002/api/v1/amsservices/requestsingleasset?assetId=${assetId}`
       );
 
       const details = response.data?.data;
@@ -961,22 +828,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const getSoftwareAssetDetail = async (
     assetId: string
   ): Promise<{ success: boolean; data?: any; error?: string }> => {
-    const token = getTokenFromCookies();
-
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
     if (!assetId || typeof assetId !== "string" || !assetId.trim()) {
       return { success: false, error: "Invalid asset ID provided." };
     }
 
     try {
-      const response = await axios.get(
-        `http://localhost:4002/api/v1/amsservices/requestsoftwareassetdetails?assetId=${assetId}`,
-        config
+      const response = await belzirAxiosGet(
+        `http://localhost:4002/api/v1/amsservices/requestsoftwareassetdetails?assetId=${assetId}`
       );
 
       const details = response.data?.data;
@@ -1030,18 +888,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const submitAssignedAsset = async (submissionData: any): Promise<any> => {
-    const token = getTokenFromCookies();
-
     try {
-      const response = await axios.post(
+      const response = await belzirAxiosPost(
         "http://localhost:4002/api/v1/amsservices/assignasset",
-        submissionData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        }
+        submissionData
       );
 
       if (response.data.success) {
@@ -1084,17 +934,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const submitInstalledSoftware = async (submissionData: any): Promise<any> => {
-    const token = getTokenFromCookies();
-
     try {
-      const response = await axios.post(
+      const response = await belzirAxiosPost(
         "http://localhost:4002/api/v1/amsservices/submitinstalledsoftware",
-        submissionData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        submissionData
       );
 
       if (response.data.success) {
@@ -1136,17 +979,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const fetchInstalledSoftwares = async (id: string): Promise<any> => {
-    const token = getTokenFromCookies();
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
     try {
-      const fetchedDetail = await axios.get(
-        `http://localhost:4002/api/v1/amsservices/fetchinstalledsoftwares?assetId=${id}`,
-        config
+      const fetchedDetail = await belzirAxiosGet(
+        `http://localhost:4002/api/v1/amsservices/fetchinstalledsoftwares?assetId=${id}`
       );
 
       return fetchedDetail.data.data; // Return fetched details from the response
@@ -1202,17 +1037,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const fetchAssociatedHardware = async (id: string): Promise<any> => {
-    const token = getTokenFromCookies();
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
     try {
-      const fetchedDetail = await axios.get(
-        `http://localhost:4002/api/v1/amsservices/fetchassociatedhardwares?assetId=${id}`,
-        config
+      const fetchedDetail = await belzirAxiosGet(
+        `http://localhost:4002/api/v1/amsservices/fetchassociatedhardwares?assetId=${id}`
       );
 
       return fetchedDetail.data.data; // Return fetched details from the response
@@ -1237,17 +1064,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const fetchSoftwareCategoriesData = async (
     category: string
   ): Promise<any> => {
-    const token = getTokenFromCookies();
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
     try {
-      const fetchedDetail = await axios.get(
-        `http://localhost:4002/api/v1/amsservices/fetchSoftwarecategorydata?category=${category}`,
-        config
+      const fetchedDetail = await belzirAxiosGet(
+        `http://localhost:4002/api/v1/amsservices/fetchSoftwarecategorydata?category=${category}`
       );
 
       return fetchedDetail.data; // Return fetched details from the response
@@ -1274,20 +1093,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     selectedCategory: string | null,
     specificCategory: string | null
   ): Promise<any> => {
-    const token = getTokenFromCookies();
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      withCredentials: true,
-    };
-
     try {
-      const fetchedDetail = await axios.get(
+      const fetchedDetail = await belzirAxiosGet(
         `http://localhost:4002/api/v1/amsservices/fetchmaintenancedata?maintenancetype=${maintenanceType}&selectedCategory=${
           selectedCategory || ""
-        }&specificCategory=${specificCategory || ""}`,
-        config
+        }&specificCategory=${specificCategory || ""}`
       );
       console.log(fetchedDetail);
       return fetchedDetail.data.data; // Return fetched details from the response
@@ -1312,19 +1122,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     category: string,
     id: string
   ): Promise<any> => {
-    console.log(id);
-    const token = getTokenFromCookies();
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
     try {
-      const fetchedDetail = await axios.get(
+      const fetchedDetail = await belzirAxiosGet(
         `http://localhost:4002/api/v1/amsservices/fetchsingleSoftwarecategorydata?category=${category}&softwareId=${id}
-`,
-        config
+`
       );
 
       return fetchedDetail.data; // Return fetched details from the response
@@ -1347,17 +1148,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const fetchAssignedDetails = async (id: string): Promise<any> => {
-    const token = getTokenFromCookies();
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
     try {
-      const fetchedDetail = await axios.get(
-        `http://localhost:4002/api/v1/amsservices/fetchassignasset?assetId=${id}`,
-        config
+      const fetchedDetail = await belzirAxiosGet(
+        `http://localhost:4002/api/v1/amsservices/fetchassignasset?assetId=${id}`
       );
 
       return fetchedDetail.data.data; // Return fetched details from the response
@@ -1380,17 +1173,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const deleteSoftwareInfo = async (id: string): Promise<any> => {
-    const token = getTokenFromCookies();
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
     try {
-      const fetchedDetail = await axios.post(
-        `http://localhost:4002/api/v1/amsservices/deletesoftwareinfo?softwareId=${id}`,
-        config
+      const fetchedDetail = await belzirAxiosPost(
+        `http://localhost:4002/api/v1/amsservices/deletesoftwareinfo?softwareId=${id}`
       );
 
       return fetchedDetail.data.data; // Return fetched details from the response
@@ -1414,16 +1199,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   const retrieveSoftwareList = async (): Promise<any> => {
     const token = getTokenFromCookies();
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
 
     try {
-      const response = await axios.get(
-        `http://localhost:4002/api/v1/amsservices/retrievesoftwarelist`,
-        config
+      const response = await belzirAxiosGet(
+        `http://localhost:4002/api/v1/amsservices/retrievesoftwarelist`
       );
 
       return response.data.data;
@@ -1476,14 +1255,129 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       return null;
     }
   };
+
+  const fetchAllMaintenance = async (
+    page = 1,
+    limit = 10,
+    searchQuery = ""
+  ): Promise<any> => {
+    try {
+      const response = await belzirAxiosGet(
+        `http://localhost:4002/api/v1/amsservices/fetchallmaintenance?page=${page}&limit=${limit}&searchQuery=${searchQuery}`
+      );
+      return response.data;
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Failed to fetch maintenance tasks!",
+        {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
+      return null;
+    }
+  };
+
+  const updateMaintenanceStatus = async (
+    id: string,
+    data: { status: string; comment: string }
+  ): Promise<any> => {
+    try {
+      const response = await belzirAxiosPut(
+        `http://localhost:4002/api/v1/amsservices/updatemaintenancestatus/${id}`,
+        data
+      );
+
+      if (response.data.success) {
+        toast.success("Maintenance status updated successfully!", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        return response.data;
+      }
+
+      return false;
+    } catch (error: any) {
+      if (error.response) {
+        // Handle 400 validation errors
+        if (error.response.status === 400 && error.response.data.errors) {
+          const errorMessages: { [key: string]: string } =
+            error.response.data.errors;
+          Object.values(errorMessages).forEach((errMsg) =>
+            toast.error(errMsg, {
+              position: "top-center",
+              autoClose: 2000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            })
+          );
+        }
+        // Handle other known error responses
+        else if (error.response.status === 500) {
+          toast.error(error.response.data.msg, {
+            position: "top-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+        // Fallback for other response errors
+        else {
+          toast.error(error.response.data.message || "An error occurred.", {
+            position: "top-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+      }
+      // Network or other unhandled errors
+      else if (error.request) {
+        toast.error("No response from the server. Please check your network.", {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+      // Other unknown errors
+      else {
+        toast.error(`Error: ${error.message}`, {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+
+      return false;
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
         ...state,
         token,
-        addUserToLocalStorage,
-        handleGoogleLogin,
-        logUserOff,
+
         addHardwareDetails,
         getAllAssetDetails,
         getSingleAssetDetail,
@@ -1511,6 +1405,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         fetchSoftwareTickets,
         fetchMaintenanceData,
         addBulkMaintenance,
+        fetchAllMaintenance,
+        updateMaintenanceStatus,
       }}
     >
       {children}

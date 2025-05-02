@@ -170,6 +170,7 @@ const AssetSoftware: React.FC = () => {
     const isSuccess = await submitInstalledSoftware(submissionData);
     if (isSuccess) {
       setErrors({}); // Clear errors after successful submission
+      fetchInstalledSoftwareDetails();
       handleClose();
       setFormData(initialState);
     }
@@ -252,21 +253,6 @@ const AssetSoftware: React.FC = () => {
                     <TableCell>
                       <Stack direction="row" spacing={1}>
                         {/* Edit Icon */}
-                        <Box
-                          onClick={() => handleEdit(software._id)}
-                          sx={{
-                            color: "green",
-                            cursor: "pointer",
-                            transition:
-                              "transform 0.2s ease-in-out, color 0.2s ease-in-out",
-                            "&:hover": {
-                              transform: "scale(1.2)",
-                              color: "#32CD32", // Light Green
-                            },
-                          }}
-                        >
-                          <EditIcon />
-                        </Box>
 
                         {/* Delete Icon */}
                         <Box

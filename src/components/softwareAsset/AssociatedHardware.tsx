@@ -202,7 +202,7 @@ const AssociatedHardware: React.FC = () => {
                     </TableCell>
 
                     <TableCell>{hardware.hardwareId.assetName}</TableCell>
-                    <TableCell>{hardware.hardwareId.uniqueId}</TableCell>
+                    <TableCell>{hardware.hardwareId.assetNumber}</TableCell>
                     <TableCell>{hardware.hardwareId.condition}</TableCell>
                     <TableCell>{hardware.softwareId.name}</TableCell>
                     <TableCell>{hardware.softwareId.licenseType}</TableCell>

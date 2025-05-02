@@ -14,8 +14,8 @@ import {
   TextField,
   TablePagination,
   Button,
+  InputAdornment
 } from "@mui/material";
-import InputAdornment from "@mui/material/InputAdornment";
 import { useAppContext } from "../../context/AppContext";
 import Sidebar from "@/components/Sidebar";
 import TabBar from "@/components/TabBar";
@@ -190,7 +190,7 @@ const AllAssets: React.FC = () => {
                     <TableRow hover component="a">
                       <TableCell>{index + 1 + page * rowsPerPage}</TableCell>
                       <TableCell>{asset.assetName}</TableCell>
-                      <TableCell>{asset.uniqueId}</TableCell>
+                      <TableCell>{asset.assetNumber}</TableCell>
                       <TableCell>{asset.assetType}</TableCell>
                       <TableCell>{asset.category || "N/A"}</TableCell>
                       <TableCell>{asset.condition}</TableCell>

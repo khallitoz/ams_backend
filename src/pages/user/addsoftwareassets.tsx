@@ -6,6 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
 import SoftwareForm from "@/components/forms/SoftwareForm";
+import Layout from "@/components/Layout";
 
 const dashboardDesign = {
   display: "flex",
@@ -47,43 +48,9 @@ const SoftwareAsset: React.FC = () => {
   }
 
   return (
-    <Box sx={dashboardDesign}>
-      <Sidebar />
-
-      <Box
-        sx={{
-          width: "100%",
-          marginLeft: "18%",
-          display: "flex",
-          flexDirection: "column",
-          backgroundColor: "white",
-          marginTop: "12px",
-          borderTop: "1px solid #d5d5d5",
-          gap: "20px",
-          padding: "20px",
-          marginBottom: "2px",
-        }}
-      >
-        <Typography sx={{ fontSize: "25px", marginTop: "40px" }}></Typography>
-
-        <Box
-          sx={{
-            width: "100%",
-            marginLeft: "20px",
-            display: "flex",
-            flexDirection: "column",
-            backgroundColor: "white",
-            marginTop: "-30px",
-
-            gap: "20px",
-            padding: "20px",
-          }}
-        >
-          <SoftwareForm />
-        </Box>
-      </Box>
-      <ToastContainer />
-    </Box>
+    <Layout>
+      <SoftwareForm />
+    </Layout>
   );
 };
 

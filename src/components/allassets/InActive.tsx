@@ -14,8 +14,8 @@ import {
   TextField,
   TablePagination,
   Button,
+  InputAdornment,
 } from "@mui/material";
-import InputAdornment from "@mui/material/InputAdornment";
 import { useAppContext } from "../../context/AppContext";
 import SearchIcon from "@mui/icons-material/Search";
 import { useDebounce } from "@/utils/useDebounce";
@@ -169,6 +169,7 @@ const InActive: React.FC = () => {
               <Table>
                 <TableHead>
                   <TableRow>
+                    <TableCell>#</TableCell>
                     <TableCell>Asset Number</TableCell>
                     <TableCell>Asset Name</TableCell>
                     <TableCell>Asset Type</TableCell>
@@ -178,7 +179,7 @@ const InActive: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {assetData.map((asset) => (
+                  {assetData.map((asset, index) => (
                     <Link
                       href={`/user/singleassetdetails/${asset._id}`}
                       key={asset._id}
@@ -186,7 +187,8 @@ const InActive: React.FC = () => {
                       legacyBehavior
                     >
                       <TableRow hover component="a">
-                        <TableCell>{asset.uniqueId}</TableCell>
+                        <TableCell>{index + 1 + page * rowsPerPage}</TableCell>
+                        <TableCell>{asset.assetNumber}</TableCell>
                         <TableCell>{asset.assetName}</TableCell>
                         <TableCell>{asset.assetType}</TableCell>
                         <TableCell>{asset.category || "N/A"}</TableCell>
