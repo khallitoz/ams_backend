@@ -13,6 +13,7 @@ import { authorizeBackblaze } from "./config/backblaze.js";
 import cors from "cors";
 import authRouter from "./routes/authRoutes.js";
 import locationRouter from "./routes/locationRoutes.js";
+import employeeRouter from "./routes/employeeRoutes.js";
 import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -62,6 +63,7 @@ app.use("/uploads", express.static("uploads"));
 app.use("/api/v1/amsservices", amsservicesRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/locations", locationRouter);
+app.use("/api/v1/employees", employeeRouter);
 
 app.use(errorHandlerMiddleware);
 

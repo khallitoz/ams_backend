@@ -72,17 +72,23 @@ const fetchSingleSoftwareCategoryData = async (req, res) => {
 const installSelectedCategories = async (req, res) => {
   console.log(req.body);
 
+  // Initialize session as null outside the try block
+  let session = null;
+
   try {
     // Get models from req.models
     const AllSoftwares = req.models.AllSoftwares;
     const Hardware = req.models.Hardware;
     const installedSoftwares = req.models.InstallSoftware;
 
-    // Start a session from one model's connection
-    // All models created from the same connection will share session capabilities
-    const session = await AllSoftwares.startSession();
-
-    await session.startTransaction();
+    // Try to start a session, but handle the case where it might not be supported
+    try {
+      session = await AllSoftwares.startSession();
+      await session.startTransaction();
+    } catch (sessionError) {
+      console.log("Sessions/transactions not supported:", sessionError.message);
+      // Continue without transaction support
+    }
 
     const { softwareIds, hardwareIds } = req.body;
 
@@ -101,8 +107,8 @@ const installSelectedCategories = async (req, res) => {
       });
     }
 
-    // Use the session with all models
-    const alreadyInstalled = await installedSoftwares
+    // Use session only if available
+    const alreadyInstalledQuery = installedSoftwares
       .find({
         hardwareId: { $in: hardwareIds },
         softwareId: { $in: softwareIds },
@@ -114,8 +120,14 @@ const installSelectedCategories = async (req, res) => {
       .populate({
         path: "hardwareId",
         select: "assetName",
-      })
-      .session(session);
+      });
+
+    // Only use session if it's available
+    if (session) {
+      alreadyInstalledQuery.session(session);
+    }
+
+    const alreadyInstalled = await alreadyInstalledQuery;
 
     if (alreadyInstalled.length > 0) {
       // Map results into a meaningful error message
@@ -126,21 +138,33 @@ const installSelectedCategories = async (req, res) => {
         )
         .join("; ");
 
-      await session.abortTransaction();
+      if (session) {
+        await session.abortTransaction();
+      }
+
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
         message: `The following installations already exist: ${alreadyInstalledDetails}`,
       });
     }
 
-    //   Validate Software Stock
-    const softwareDetails = await AllSoftwares.find({
+    // Validate Software Stock
+    const softwareDetailsQuery = AllSoftwares.find({
       _id: { $in: softwareIds },
-    }).session(session);
+    });
+
+    if (session) {
+      softwareDetailsQuery.session(session);
+    }
+
+    const softwareDetails = await softwareDetailsQuery;
 
     for (const software of softwareDetails) {
       if (software.spares < hardwareIds.length) {
-        await session.abortTransaction();
+        if (session) {
+          await session.abortTransaction();
+        }
+
         return res.status(StatusCodes.BAD_REQUEST).json({
           success: false,
           message: `Insufficient stock for software: ${software.name}. Available spares: ${software.spares}, Selected Hardware devices are: ${hardwareIds.length}`,
@@ -148,7 +172,7 @@ const installSelectedCategories = async (req, res) => {
       }
     }
 
-    //  Step 3: Bulk Update Software Quantities
+    // Step 3: Bulk Update Software Quantities
     const bulkUpdateOperations = softwareDetails.map((software) => ({
       updateOne: {
         filter: { _id: software._id },
@@ -161,9 +185,10 @@ const installSelectedCategories = async (req, res) => {
       },
     }));
 
-    await AllSoftwares.bulkWrite(bulkUpdateOperations, { session });
+    const bulkWriteOptions = session ? { session } : {};
+    await AllSoftwares.bulkWrite(bulkUpdateOperations, bulkWriteOptions);
 
-    //  Step 4: Bulk Insert Installation Records
+    // Step 4: Bulk Insert Installation Records
     const installedRecords = [];
 
     hardwareIds.forEach((hardwareId) => {
@@ -177,10 +202,13 @@ const installSelectedCategories = async (req, res) => {
       });
     });
 
-    await installedSoftwares.insertMany(installedRecords, { session });
+    const insertManyOptions = session ? { session } : {};
+    await installedSoftwares.insertMany(installedRecords, insertManyOptions);
 
-    // Commit Transaction
-    await session.commitTransaction();
+    // Commit Transaction if session exists
+    if (session) {
+      await session.commitTransaction();
+    }
 
     res.status(StatusCodes.OK).json({
       success: true,
@@ -188,8 +216,15 @@ const installSelectedCategories = async (req, res) => {
       data: installedRecords,
     });
   } catch (error) {
-    // Rollback Transaction on Error
-    await session.abortTransaction();
+    // Rollback Transaction on Error if session exists
+    if (session) {
+      try {
+        await session.abortTransaction();
+      } catch (abortError) {
+        console.error("Error aborting transaction:", abortError.message);
+      }
+    }
+
     console.error("Error during bulk installation:", error.message);
 
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -198,7 +233,14 @@ const installSelectedCategories = async (req, res) => {
       error: error.message,
     });
   } finally {
-    session.endSession();
+    // End session if it exists
+    if (session) {
+      try {
+        session.endSession();
+      } catch (endSessionError) {
+        console.error("Error ending session:", endSessionError.message);
+      }
+    }
   }
 };
 

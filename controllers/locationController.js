@@ -95,6 +95,7 @@ export const createLocation = async (req, res) => {
     const Location = req.models.Location;
     const locationData = req.body;
 
+    console.log(locationData);
     // Check if location with this name already exists
     const existingLocation = await Location.findOne({
       name: locationData.name,

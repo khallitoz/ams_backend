@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import bcryptjs from "bcryptjs";
 import modelRegistry from "./ModelRegistry.js";
+import { MongoClient } from "mongodb";
 
 // Get the directory name
 const __filename = fileURLToPath(import.meta.url);
@@ -19,6 +20,7 @@ import CounterSchema from "../models/schemas/CounterSchema.js";
 import UserSchema from "../models/schemas/UserSchema.js";
 import MaintenanceSchema from "../models/schemas/MaintenanceSchema.js";
 import LocationSchema from "../models/schemas/LocationSchema.js";
+import EmployeeSchema from "../models/schemas/EmployeeSchema.js";
 
 // Map to store active connections and their models
 const connections = new Map();
@@ -39,6 +41,7 @@ const createModels = async (connection) => {
     User: connection.model("User", UserSchema),
     Maintenance: connection.model("Maintenance", MaintenanceSchema),
     Location: connection.model("Location", LocationSchema),
+    Employee: connection.model("Employee", EmployeeSchema),
   };
 
   return models;
@@ -89,11 +92,16 @@ const connectDb = async (url, client_id = null) => {
       // Extract the base connection string (everything before the database name)
       const baseUrl = url.substring(0, url.lastIndexOf("/"));
       // Create a new connection string with the client_id as the database name
-      connectionString = `${baseUrl}/${client_id}?retryWrites=true&w=majority`;
+      connectionString = `${baseUrl}/${client_id}?authSource=AMS`;
     }
 
     console.log(`Creating new connection to database: ${connectionKey}`);
-
+    const baseUrl = url.substring(0, url.lastIndexOf("/"));
+    const client = new MongoClient(`${baseUrl}/AMS?authSource=AMS`);
+    await client.connect();
+    const db = client.db(client_id);
+    const dbList = await client.db().admin().listDatabases();
+    console.log(dbList);
     // Create a new mongoose connection
     const connection = mongoose.createConnection(connectionString);
 

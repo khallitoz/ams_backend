@@ -48,6 +48,8 @@ import {
   getSoftwareByCategory,
 } from "../controllers/dashboardController.js";
 
+import { fetchAllDevices } from "../controllers/fetchAllDevices.js";
+import { fetchSingleDevice } from "../controllers/fetchSingleDevice.js";
 const router = express.Router();
 
 // Routes now only need withModels as dbConnection is applied to all routes
@@ -160,6 +162,12 @@ router.get(
   dbConnection,
   withModels(fetchAllMaintenance)
 );
+
+//Fetch all devices
+router.get("/fetchalldevices", dbConnection, withModels(fetchAllDevices));
+
+//Fetch single device
+router.get("/fetchsingledevice", dbConnection, withModels(fetchSingleDevice));
 
 // Add route for getting all users
 router.get("/users", dbConnection, withModels(getAllUsers));
