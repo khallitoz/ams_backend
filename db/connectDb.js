@@ -101,7 +101,17 @@ const connectDb = async (url, client_id = null) => {
     await client.connect();
     const db = client.db(client_id);
     const dbList = await client.db().admin().listDatabases();
-    console.log(dbList);
+
+    const dbNames = dbList.databases.map((db) => db.name);
+
+    //Check to see if client_id is in the list of databases
+    if (!dbNames.includes(client_id)) {
+      console.log(`Database ${client_id} not found in the list of databases`);
+      throw new Error(
+        `Database ${client_id} not found in the list of databases`
+      );
+    }
+
     // Create a new mongoose connection
     const connection = mongoose.createConnection(connectionString);
 
