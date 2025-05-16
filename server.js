@@ -3,7 +3,13 @@ import dotenv from "dotenv";
 
 import morgan from "morgan";
 import "express-async-errors";
-import { closeAllConnections, getConnections } from "./db/connectDb.js";
+import {
+  closeAllConnections,
+  getConnections,
+  ensureDatabaseNamesLoaded,
+  startPeriodicCacheRefresh,
+  stopPeriodicCacheRefresh,
+} from "./db/connectDb.js";
 import modelRegistry from "./db/ModelRegistry.js";
 
 import amsservicesRouter from "./routes/amsserviceRoutes.js";
@@ -88,6 +94,13 @@ app.get("/api/v1/debug/connections", (req, res) => {
 // Start Server
 const start = async () => {
   try {
+    // Initialize database names cache
+    console.log("Initializing database names cache...");
+    await ensureDatabaseNamesLoaded(process.env.MONGO_URI);
+
+    // Start periodic refresh of database names (every 30 minutes)
+    startPeriodicCacheRefresh(process.env.MONGO_URI, 30 * 60 * 1000);
+
     await authorizeBackblaze();
     console.log(" Backblaze B2 Authorized on Server Startup");
 
@@ -98,6 +111,9 @@ const start = async () => {
     // Handle graceful shutdown
     const shutdown = async () => {
       console.log("Shutting down gracefully");
+
+      // Stop periodic cache refresh
+      stopPeriodicCacheRefresh();
 
       // Clear the model registry
       modelRegistry.clear();

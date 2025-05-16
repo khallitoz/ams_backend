@@ -2,5 +2,6 @@ import express from "express";
 const router = express.Router();
 import { verifyToken } from "../controllers/authController.js";
 
-router.route("/users/token/verify").post(verifyToken);
+router.get("/users/token/verify", verifyToken);
+
 export default router;

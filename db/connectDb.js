@@ -24,6 +24,8 @@ import EmployeeSchema from "../models/schemas/EmployeeSchema.js";
 
 // Map to store active connections and their models
 const connections = new Map();
+// Simple cache for database names
+const dbNamesCache = new Set();
 // Timeout for inactive connections (in milliseconds)
 const CONNECTION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
@@ -97,15 +99,31 @@ const connectDb = async (url, client_id = null) => {
 
     console.log(`Creating new connection to database: ${connectionKey}`);
     const baseUrl = url.substring(0, url.lastIndexOf("/"));
-    const client = new MongoClient(`${baseUrl}/AMS?authSource=AMS`);
-    await client.connect();
-    const db = client.db(client_id);
-    const dbList = await client.db().admin().listDatabases();
 
-    const dbNames = dbList.databases.map((db) => db.name);
+    // Check if client_id is in the cache
+    if (!dbNamesCache.has(client_id)) {
+      // If not in cache, get the list of databases
+      const client = new MongoClient(`${baseUrl}/AMS?authSource=AMS`);
+      try {
+        await client.connect();
+        const db = client.db(client_id);
+        const dbList = await client.db().admin().listDatabases();
+        const dbNames = dbList.databases.map((db) => db.name);
+
+        // Add all database names to the cache
+        dbNames.forEach((name) => dbNamesCache.add(name));
+        console.log(
+          `Updated database names cache with ${dbNames.length} databases`
+        );
+      } finally {
+        // Ensure the client is closed to prevent connection leaks
+        await client.close();
+        console.log("Closed temporary MongoDB client connection");
+      }
+    }
 
     //Check to see if client_id is in the list of databases
-    if (!dbNames.includes(client_id)) {
+    if (!dbNamesCache.has(client_id)) {
       console.log(`Database ${client_id} not found in the list of databases`);
       throw new Error(
         `Database ${client_id} not found in the list of databases`
@@ -248,6 +266,103 @@ export const getConnections = () => {
     connectionState: value.connection.readyState,
     lastUsed: value.lastUsed,
   }));
+};
+
+/**
+ * Checks if a database exists using the cache
+ * @param {string} client_id - The client ID to check
+ * @returns {boolean} - Whether the database exists
+ */
+export const isValidDatabase = (client_id) => {
+  if (!client_id) return false;
+  return dbNamesCache.has(client_id);
+};
+
+/**
+ * Ensures database names are loaded in the cache
+ * @param {string} url - MongoDB connection URL
+ * @param {boolean} forceRefresh - Whether to force a refresh of the cache
+ * @returns {Promise<boolean>} - Whether the operation was successful
+ */
+export const ensureDatabaseNamesLoaded = async (url, forceRefresh = false) => {
+  // If cache is empty or force refresh is requested, populate it
+  if (dbNamesCache.size === 0 || forceRefresh) {
+    const baseUrl = url.substring(0, url.lastIndexOf("/"));
+    const client = new MongoClient(`${baseUrl}/AMS?authSource=AMS`);
+    try {
+      await client.connect();
+      const dbList = await client.db().admin().listDatabases();
+      const dbNames = dbList.databases.map((db) => db.name);
+
+      // Clear cache if refreshing
+      if (forceRefresh && dbNamesCache.size > 0) {
+        dbNamesCache.clear();
+      }
+
+      // Add all names to cache
+      dbNames.forEach((name) => dbNamesCache.add(name));
+
+      const action = forceRefresh ? "Refreshed" : "Preloaded";
+      console.log(`${action} ${dbNames.length} database names into cache`);
+      return true;
+    } catch (error) {
+      console.error("Error loading database names:", error);
+      throw error;
+    } finally {
+      await client.close();
+      console.log("Closed temporary MongoDB client connection");
+    }
+  }
+  return true;
+};
+
+// Helper function to refresh the database names cache periodically
+let cacheRefreshInterval = null;
+
+/**
+ * Starts periodic refresh of database names cache
+ * @param {string} url - MongoDB connection URL
+ * @param {number} intervalMs - Refresh interval in milliseconds (default: 1 hour)
+ */
+export const startPeriodicCacheRefresh = (url, intervalMs = 60 * 60 * 1000) => {
+  // Clear any existing interval
+  if (cacheRefreshInterval) {
+    clearInterval(cacheRefreshInterval);
+  }
+
+  // Set up new interval
+  cacheRefreshInterval = setInterval(async () => {
+    try {
+      console.log("Performing scheduled refresh of database names cache");
+      await ensureDatabaseNamesLoaded(url, true);
+    } catch (error) {
+      console.error("Error during scheduled cache refresh:", error);
+    }
+  }, intervalMs);
+
+  console.log(
+    `Database names cache will refresh every ${intervalMs / 60000} minutes`
+  );
+  return true;
+};
+
+/**
+ * Stops periodic refresh of database names cache
+ */
+export const stopPeriodicCacheRefresh = () => {
+  if (cacheRefreshInterval) {
+    clearInterval(cacheRefreshInterval);
+    cacheRefreshInterval = null;
+    console.log("Stopped periodic database names cache refresh");
+  }
+};
+
+/**
+ * Clears the database names cache
+ */
+export const clearDbNamesCache = () => {
+  dbNamesCache.clear();
+  console.log("Cleared database names cache");
 };
 
 // Export the default connectDb function
